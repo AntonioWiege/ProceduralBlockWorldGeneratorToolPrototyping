@@ -1,0 +1,387 @@
+/*Antonio Wiege*/
+#pragma kernel ND3
+#pragma kernel ND2
+//booleans cannot be set, using floats 0 = false everything else true
+float planarize=0;
+float choppy=0;
+float turbulent=0;//invert to get ridge
+float invert=0;//together with turbulent to get ridge
+float distortSpace=0;
+//regular values ; pre-assigning values does not work in here. The written values are merely standard suggestions
+RWStructuredBuffer<float> Output;//linear layout
+int dispatchThreadGroupCountX=4;
+StructuredBuffer<float3> DistortionData;//overwrite local block pos
+
+int resultApplicationID;
+float weight;
+
+int cellularMethodID;
+float planarizeAtY=0;
+float planarizeIntensity=0;
+
+float4 position=float4(0,0,0,0);//x,y,z,w with w e.g. bias, seed, etc
+int noiseDimensionCount=4;
+
+float4 size=1;
+float4 rotation;
+
+float octaveStartSize=2;
+int octaveCount=5;
+float octaveStepPow=2;
+float octaveInfluenceBias=1;
+
+float multiplyWith=1;
+float addPostMultiply = 0;
+float clampEndResultMin = 0;
+float clampEndResultMax = 1;
+
+//method head definitions
+float4 Rotate(float4 p);
+
+float CellNoise(float4 pos, float size);
+
+float GridFloor(float value, float gridSize);
+float2 GridFloor(float2 value, float gridSize);
+float3 GridFloor(float3 value, float gridSize);
+float4 GridFloor(float4 value, float gridSize);
+
+float Hash2Float(uint hash);
+
+uint Hash0(float seed);
+uint Hash1(float seed);
+uint Hash2(float seed);
+uint Hash3(float seed);
+uint Hash4(float seed);
+uint Hash5(float seed);
+uint Hash6(float seed);
+uint Hash7(float seed);
+
+[numthreads(8,8,1)]
+void ND2 (uint3 id : SV_DispatchThreadID)
+{
+    float value = 0;
+    float div = 0;
+    float scale = 1;
+    int cid = id.x + id.y * dispatchThreadGroupCountX;
+    float4 pos = (float4(id.x, id.y, 0, 0)+position+((distortSpace==0)?0:float4(DistortionData[cid].x,DistortionData[cid].y,DistortionData[cid].z,0)))*size;
+        for (int o = octaveStartSize; o < octaveStartSize+octaveCount; o++)
+        {
+            scale = pow(abs(octaveStepPow), o);
+        value +=   abs(CellNoise(pos, scale) *pow(scale,octaveInfluenceBias)- ((choppy!=0)?0.5:0))*((choppy!=0)?2:1);
+            div +=pow(scale,octaveInfluenceBias);
+        }
+   value /= (div<1)?1:div;
+   value= (turbulent!=0)?abs ((value-0.5)*2):value;
+  value= (invert!=0)?1-value:value;
+     value = clamp(value*multiplyWith+addPostMultiply-
+        ((planarize!=0)?planarizeIntensity*(pos.y-planarizeAtY):0),
+        clampEndResultMin,clampEndResultMax);
+
+  switch(resultApplicationID){
+      case 1:
+      Output[cid] += value*weight;
+      break;
+      case 2:
+      Output[cid] -= value*weight;
+      break;
+      case 3:
+      Output[cid] *= value*weight;
+      break;
+      case 4:
+      Output[cid] /= (value*weight==0)?1:value*weight;//do not divide by zero my friend
+      break;
+      case 5:
+      Output[cid] = value*(.5+weight*.5)+Output[cid]*(.5-weight*.5);
+      break;
+      case 6:
+      Output[cid] %= value;
+      break;
+      case 7:
+      Output[cid] = abs(value-Output[cid]);
+      break;
+      default:
+      Output[cid] = value;
+      break;
+      }
+}
+
+[numthreads(4,4,4)]
+void ND3 (uint3 id : SV_DispatchThreadID)
+{
+     float value = 0;
+    float div = 0;
+    float scale = 1;
+    int cid = id.x + id.y * dispatchThreadGroupCountX + id.z * dispatchThreadGroupCountX*dispatchThreadGroupCountX;
+    float4 pos = (float4(id.x, id.y, id.z, 0) + position+((distortSpace==0)?0:float4(DistortionData[cid].x,DistortionData[cid].y,DistortionData[cid].z,0)))*size;
+        for (int o = octaveStartSize; o < octaveStartSize+octaveCount; o++)
+        {
+            scale = pow(abs(octaveStepPow), o);
+        value +=   abs(CellNoise(pos, scale) *pow(scale,octaveInfluenceBias)- ((choppy!=0)?0.5:0))*((choppy!=0)?2:1);
+            div += pow(scale,octaveInfluenceBias);
+        }
+   value /= (div<1)?1:div;
+   value= (turbulent!=0)?abs ((value-0.5)*2):value;
+  value= (invert!=0)?1-value:value;  value = clamp(value*multiplyWith+addPostMultiply-
+        ((planarize!=0)?planarizeIntensity*(pos.y-planarizeAtY):0),
+        clampEndResultMin,clampEndResultMax);
+
+  switch(resultApplicationID){
+      case 1:
+      Output[cid] += value*weight;
+      break;
+      case 2:
+      Output[cid] -= value*weight;
+      break;
+      case 3:
+      Output[cid] *= value*weight;
+      break;
+      case 4:
+      Output[cid] /= (value*weight==0)?1:value*weight;//do not divide by zero my friend
+      break;
+      case 5:
+      Output[cid] = value*(.5+weight*.5)+Output[cid]*(.5-weight*.5);
+      break;
+      case 6:
+      Output[cid] %= value;
+      break;
+      case 7:
+      Output[cid] = abs(value-Output[cid]);
+      break;
+      default:
+      Output[cid] = value;
+      break;
+      }
+}
+
+
+//Rotation happens in 3D space. The rotation defines a vector in xyz plus the angle w to rotate around it (w 1 = 360 | 2PI)
+  float4 Rotate(float4 p){
+                //from here 
+                 //https://www.geeks3d.com/20141201/how-to-rotate-a-vertex-by-a-quaternion-in-glsl/
+                if(length(rotation.xyz)==0)rotation.y=1;
+                float ha =  rotation.w*3.14159265358979323846264338;
+                float3 n = normalize(rotation.xyz);
+                float4 q = float4(
+                n.x * sin(ha),
+                n.y * sin(ha),
+                n.z * sin(ha),
+                cos(ha));
+     //from here https://code.google.com/archive/p/kri/wikis/Quaternions.wiki
+     float3 v = float3(p.x,p.y,p.z);
+     float3 o = v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
+     return float4(o.x,o.y,o.z,p.w);
+    }
+
+ float CellNoise(float4 pos, float size){
+    pos = Rotate(pos);
+
+       float4 o = GridFloor(pos,size); //original in size space
+    float4 p = o * size; //stepped in real space
+    float4 r = (pos - p) / size; //0-1 pos within step
+    //posXYZ&Value now using 4 points per cell
+    float4 points[3*3*3*3*2];
+    //*
+    for (int w = -1; w < 2; w++)
+        {
+    for (int z = -1; z < 2; z++)
+        {
+            for (int y = -1; y < 2; y++)
+            {
+                for (int x = -1; x < 2; x++)
+                {
+                    int id = (x+1) + (y+1) * 3 + (z+1) * 9 + (w+1) * 27;
+                    
+                    float4 offset= p + float4(x,y,z,w) * size;
+
+                    points[id*2]= float4(
+       ((noiseDimensionCount>0)?            offset.x+     Hash2Float(Hash0(offset.x)*Hash1(-offset.y)+Hash2(offset.z)+Hash3(offset.w))*size :0) ,
+         ((noiseDimensionCount>1)?             offset.y+    Hash2Float( Hash3(offset.y)*Hash4(-offset.z)+Hash5(offset.x)+Hash6(offset.w))*size:0),
+         ((noiseDimensionCount>2)?             offset.z+    Hash2Float( Hash6(offset.z)*Hash7(-offset.x)+Hash0(offset.y)+Hash1(offset.w))*size:0),
+         ((noiseDimensionCount>3)?               offset.w +Hash2Float( Hash1(offset.z)*Hash2(-offset.x)+Hash3(offset.y)+Hash4(offset.w))*size:0))
+                        ;
+
+                            points[id*2+1]= float4(
+        ((noiseDimensionCount>0)?             offset.x+     Hash2Float(Hash1(offset.x)*Hash2(-offset.y)+Hash3(offset.z)+Hash4(offset.w))*size :0),
+        ((noiseDimensionCount>1)?                offset.y+    Hash2Float( Hash0(offset.y)*Hash1(-offset.z)+Hash2(offset.x)+Hash3(offset.w))*size:0),
+         ((noiseDimensionCount>2)?               offset.z+    Hash2Float( Hash3(offset.z)*Hash4(-offset.x)+Hash5(offset.y)+Hash6(offset.w))*size:0),
+          ((noiseDimensionCount>3)?                offset.w +Hash2Float( Hash6(offset.z)*Hash7(-offset.x)+Hash0(offset.y)+Hash1(offset.w))*size:0))
+                        ;
+                        
+                    }
+                    }
+                    }
+                    }
+
+                    float min0=10000;
+                    float min1=10000;
+                    float min2=10000;
+                    float min3=10000;
+                    float current=0;
+                    float4 minP=float4(-100000,-100000,-100000,-100000);
+
+                    float4 comparerPos = float4(
+       ((noiseDimensionCount>0)?            pos.x :0) ,
+         ((noiseDimensionCount>1)?             pos.y:0),
+         ((noiseDimensionCount>2)?            pos.z:0),
+         ((noiseDimensionCount>3)?               pos.w:0));
+
+             for (int i = 0; i < 3*3*3*3*2; i++) 
+    {
+        current = distance(points[i], comparerPos);
+        if(current < min0){
+            min3=min2;
+            min2=min1;
+            min1=min0;
+            min0=current;
+            minP = points[i];
+            }
+        }
+
+        //better return all the mins in vector form plus the final point and then switch on demand last.
+
+        switch(cellularMethodID){
+            case 0:
+             return  Hash2Float(Hash0(minP.x)*Hash1(-minP.y)+Hash2(minP.z)+Hash3(minP.w));
+            case 2:
+             return 1-distance(pos,minP)/size;
+            case 3:
+              return abs(min1-min0);
+            case 4:
+             return abs(min2-min1)+abs(min1-min0)+abs(min0-min2);
+            case 5:
+             return abs(min2-min1)+abs(min1-min0)+abs(min0-min2)+abs(min3-min0)+abs(min3-min1)+abs(min3-min2);
+            default:
+            return distance(pos,minP)/size;
+            }
+       }
+
+
+    float GridFloor(float value, float gridSize)
+    {
+        float r = (value-value%gridSize)/gridSize;
+        if( value < 0 && gridSize > value) r-=1;
+        return r;
+    }
+
+       float2 GridFloor(float2 value, float gridSize)
+    {
+        return float2(GridFloor(value.x, gridSize), GridFloor(value.y, gridSize));
+    }
+
+       float3 GridFloor(float3 value, float gridSize)
+    {
+        return float3(GridFloor(value.x, gridSize), GridFloor(value.y, gridSize), GridFloor(value.z, gridSize));
+    }
+
+      float4 GridFloor(float4 value, float gridSize)
+    {
+        return float4(GridFloor(value.x, gridSize), GridFloor(value.y, gridSize), GridFloor(value.z, gridSize),GridFloor(value.w, gridSize));
+    }
+
+
+
+    /*
+Note on RNG:
+
+Tried using the usual shader way with dot & frac -> smaller coordinate coverage and more questionable quality.
+Tried combining with passed presets (range of numbers to pick from) -> more rng controll & overhead not worth over post control.
+ Other custom things so far.. just no.
+ Current Hash implementation based on https://burtleburtle.net/bob/hash/integer.html, https://burtleburtle.net/bob/hash/integer.html & based off of from H. Schechter & R. Bridson, goo.gl/RXiKaH
+*/
+
+float Hash2Float(uint hash)
+{
+    return clamp(float(hash) / 4294967295.0,-1,1); // 2^32-1
+}
+
+uint Hash0(float seed)
+{
+    uint s = asuint(seed - 1367.97546) - 2437962429u;
+    s ^= 1331311319u;
+    s *= 1954568973u;
+    s ^= s >> 17;
+    s *= 2987348578u;
+    s ^= s >> 13;
+    s *= 1862398427u;
+    return s;
+}
+
+uint Hash1(float seed)
+{
+    uint s = asuint(seed + 3573.217801) + 3456735731u;
+    s ^= s << 13;
+    s *= 3698471546u;
+    s ^= s >> 17;
+    s *= 1876428345u;
+    s ^= s << 5;
+    return s;
+}
+
+uint Hash2(float seed)
+{
+    uint s = asuint(seed + 4823.753849) + 1863897315u;
+    s = (s ^ 61) ^ (s >> 16);
+    s *= 9;
+    s = s ^ (s >> 4);
+    s *= 668265261u;
+    s = s ^ (s >> 15);
+    return s;
+}
+
+uint Hash3(float seed)
+{
+    uint s = asuint(seed - 5886.34896) - 2887962599u;
+    s ^= 2747636419u;
+    s *= 2654435769u;
+    s ^= s >> 16;
+    s *= 2654435769u;
+    s ^= s >> 16;
+    s *= 2654435769u;
+    return s;
+}
+
+uint Hash4(float seed)
+{
+    uint s = asuint(seed - 5846.34896) - 1887962593u;
+    s ^= 1747636419u;
+    s *= 3654435769u;
+    s ^= s >> 11;
+    s *= 1654435769u;
+    s ^= s >> 14;
+    s *= 3654435769u;
+    return s;
+}
+
+    uint Hash5(float seed)
+{
+    uint s = asuint(seed + 7645.35896) + 2938475611u;
+    s ^= s << 18;
+    s *= 3698471546u;
+    s ^= s >> 14;
+    s *= 1876428345u;
+    s ^= s << 7;
+    return s;
+}
+
+uint Hash6(float seed)
+{
+    uint s = asuint(seed + 2387.357890) + 3847562931u;
+    s = (s ^ 13) ^ (s >> 31);
+    s *= 6;
+    s = s ^ (s >> 3);
+    s *= 886265269u;
+    s = s ^ (s >> 17);
+    return s;
+}
+
+uint Hash7(float seed)
+{
+    uint s = asuint(seed - 1999.86401) - 3928374651u;
+    s ^= 1918275634u;
+    s *= 3029385716u;
+    s ^= s >> 17;
+    s *= 1295847452u;
+    s ^= s >> 17;
+    s *= 1928636475u;
+    return s;
+}

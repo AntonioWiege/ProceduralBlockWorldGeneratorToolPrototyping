@@ -1,0 +1,749 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &198583930451309543
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6859783074629745707}
+  - component: {fileID: 5926931562671899027}
+  m_Layer: 0
+  m_Name: Landscape Tool Prefab
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6859783074629745707
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 198583930451309543}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 4483828378163861072}
+  - {fileID: 8885405805750180067}
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5926931562671899027
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 198583930451309543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 574f198de7c23384b921dd3a907d6efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Pause_pipeline_loop: 0
+  Sculpting_and_Brush_setup:
+    brushType: 1
+    brushMode: 0
+    meshToBrush: {fileID: 0}
+    matterToSet: 
+    blockToSet: 
+    colorToPaint: {r: 0, g: 0, b: 0, a: 0}
+    randomA: 0
+    randomB: 0
+    falloff:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    scaleRadius: 0
+    rotation: {x: 0, y: 0, z: 0, w: 0}
+    voxelPositions: []
+  BiomeValues_Temperature:
+    resultApplicationID: 0
+    seed: -2
+    weight: 0
+    cellular: 0
+    cellularMethodID: 0
+    position: {x: 0, y: 0, z: 0, w: 0}
+    interpolationMethodID: 0
+    noiseDimensionCount: 4
+    scale: {x: 1, y: 1, z: 1, w: 1}
+    rotation: {x: 0, y: 0, z: 0, w: 0}
+    octaveStartSize: 4
+    octaveCount: 3
+    octaveStepPow: 2
+    octaveInfluenceBias: 0
+    planarize: 0
+    planarizeAtY: 0
+    planarizeIntensity: 0
+    choppy: 0
+    turbulent: 0
+    invert: 0
+    dotsPerCell: 0
+    multiplyWith: 1
+    addPostMultiply: 0
+    clampEndResultMin: 0
+    clampEndResultMax: 1
+    useCustomPositioning: 0
+    spaceDistortion: []
+  BiomeValues_Variety:
+    resultApplicationID: 0
+    seed: -1
+    weight: 0
+    cellular: 0
+    cellularMethodID: 0
+    position: {x: 0, y: 0, z: 0, w: 0}
+    interpolationMethodID: 0
+    noiseDimensionCount: 4
+    scale: {x: 1, y: 1, z: 1, w: 1}
+    rotation: {x: 0, y: 0, z: 0, w: 0}
+    octaveStartSize: 4
+    octaveCount: 3
+    octaveStepPow: 2
+    octaveInfluenceBias: 0
+    planarize: 0
+    planarizeAtY: 0
+    planarizeIntensity: 0
+    choppy: 0
+    turbulent: 0
+    invert: 0
+    dotsPerCell: 0
+    multiplyWith: 1
+    addPostMultiply: 0
+    clampEndResultMin: 0
+    clampEndResultMax: 1
+    useCustomPositioning: 0
+    spaceDistortion: []
+  BiomeValues_Moisture:
+    resultApplicationID: 0
+    seed: 0
+    weight: 0
+    cellular: 0
+    cellularMethodID: 0
+    position: {x: 0, y: 0, z: 0, w: 0}
+    interpolationMethodID: 0
+    noiseDimensionCount: 4
+    scale: {x: 1, y: 1, z: 1, w: 1}
+    rotation: {x: 0, y: 0, z: 0, w: 0}
+    octaveStartSize: 4
+    octaveCount: 3
+    octaveStepPow: 2
+    octaveInfluenceBias: 0
+    planarize: 0
+    planarizeAtY: 0
+    planarizeIntensity: 0
+    choppy: 0
+    turbulent: 0
+    invert: 0
+    dotsPerCell: 0
+    multiplyWith: 1
+    addPostMultiply: 0
+    clampEndResultMin: 0
+    clampEndResultMax: 1
+    useCustomPositioning: 0
+    spaceDistortion: []
+  biomes:
+  - point_in_Biome_Value_Space: {x: 0.2, y: 0.2, z: 0.2}
+    noises:
+    - resultApplicationID: 0
+      seed: 1
+      weight: 1
+      cellular: 0
+      cellularMethodID: 2
+      position: {x: 0, y: 0, z: 0, w: 0}
+      interpolationMethodID: 0
+      noiseDimensionCount: 4
+      scale: {x: 1, y: 1, z: 1, w: 1}
+      rotation: {x: 0.25, y: 0.1, z: 0.9, w: 0.68}
+      octaveStartSize: 2
+      octaveCount: 4
+      octaveStepPow: 2
+      octaveInfluenceBias: 1.585
+      planarize: 1
+      planarizeAtY: 0
+      planarizeIntensity: 0.05
+      choppy: 1
+      turbulent: 1
+      invert: 1
+      dotsPerCell: 6
+      multiplyWith: 1
+      addPostMultiply: 0
+      clampEndResultMin: 0
+      clampEndResultMax: 1
+      useCustomPositioning: 0
+      spaceDistortion: []
+    SurfaceLand:
+      name: Sand
+      material: {fileID: 0}
+      texturesAtlasOrigin: {x: 0.25, y: 0.875}
+      color: {r: 0.9150943, g: 0.7786284, b: 0.17841454, a: 1}
+    SurfaceUnderwater:
+      name: Sand
+      material: {fileID: 0}
+      texturesAtlasOrigin: {x: 0.25, y: 0.875}
+      color: {r: 1, g: 0.80364347, b: 0, a: 1}
+    Underground:
+      name: Rock
+      material: {fileID: 0}
+      texturesAtlasOrigin: {x: 0.875, y: 0.875}
+      color: {r: 0.8584906, g: 0.7740419, b: 0.5237332, a: 1}
+    scatterDecoratives:
+    - {fileID: 919132149155446097, guid: 1191ce3432fffee4db5a9a2f1652a63e, type: 3}
+    treeType: 2
+    treeDensity: 0.01
+    grassDensity: 0.1
+    scatterDensity: 0.05
+    generateGrass: 0
+    treeWaterTollerance: 0
+  - point_in_Biome_Value_Space: {x: 0.5, y: 0.5, z: 0.5}
+    noises:
+    - resultApplicationID: 0
+      seed: 2
+      weight: 1
+      cellular: 0
+      cellularMethodID: 2
+      position: {x: 0, y: 0, z: 0, w: 0}
+      interpolationMethodID: 0
+      noiseDimensionCount: 4
+      scale: {x: 1, y: 1, z: 1, w: 1}
+      rotation: {x: 1, y: 0, z: 0, w: 0.25}
+      octaveStartSize: 2
+      octaveCount: 4
+      octaveStepPow: 0
+      octaveInfluenceBias: 1.585
+      planarize: 1
+      planarizeAtY: 0
+      planarizeIntensity: 0.05
+      choppy: 0
+      turbulent: 0
+      invert: 0
+      dotsPerCell: 6
+      multiplyWith: 1
+      addPostMultiply: 0
+      clampEndResultMin: 0
+      clampEndResultMax: 1
+      useCustomPositioning: 0
+      spaceDistortion: []
+    - resultApplicationID: 1
+      seed: 3
+      weight: 1
+      cellular: 0
+      cellularMethodID: 2
+      position: {x: 0, y: 0, z: 0, w: 0}
+      interpolationMethodID: 0
+      noiseDimensionCount: 4
+      scale: {x: 1, y: 1, z: 1, w: 1}
+      rotation: {x: 1, y: 0, z: 0, w: 0.25}
+      octaveStartSize: 2
+      octaveCount: 4
+      octaveStepPow: 0
+      octaveInfluenceBias: 1.585
+      planarize: 1
+      planarizeAtY: 0
+      planarizeIntensity: 0.05
+      choppy: 0
+      turbulent: 0
+      invert: 0
+      dotsPerCell: 6
+      multiplyWith: 1
+      addPostMultiply: 0
+      clampEndResultMin: 0
+      clampEndResultMax: 1
+      useCustomPositioning: 0
+      spaceDistortion: []
+    - resultApplicationID: 2
+      seed: 4
+      weight: 2
+      cellular: 0
+      cellularMethodID: 2
+      position: {x: 0, y: 0, z: 0, w: 0}
+      interpolationMethodID: 0
+      noiseDimensionCount: 2
+      scale: {x: 1, y: 1, z: 1, w: 1}
+      rotation: {x: 1, y: 0, z: 0, w: 0.25}
+      octaveStartSize: 2
+      octaveCount: 5
+      octaveStepPow: 0
+      octaveInfluenceBias: 1.585
+      planarize: 1
+      planarizeAtY: 0
+      planarizeIntensity: -0.01
+      choppy: 0
+      turbulent: 1
+      invert: 1
+      dotsPerCell: 6
+      multiplyWith: 1
+      addPostMultiply: 0
+      clampEndResultMin: 0
+      clampEndResultMax: 1
+      useCustomPositioning: 0
+      spaceDistortion: []
+    - resultApplicationID: 2
+      seed: 5
+      weight: 3
+      cellular: 1
+      cellularMethodID: 4
+      position: {x: 0, y: 0, z: 0, w: 0}
+      interpolationMethodID: 0
+      noiseDimensionCount: 4
+      scale: {x: 1, y: 1, z: 1, w: 1}
+      rotation: {x: 1, y: 0, z: 0, w: 0.25}
+      octaveStartSize: 6
+      octaveCount: 1
+      octaveStepPow: 2
+      octaveInfluenceBias: 1
+      planarize: 0
+      planarizeAtY: 0
+      planarizeIntensity: 0
+      choppy: 0
+      turbulent: 0
+      invert: 1
+      dotsPerCell: 0
+      multiplyWith: 1
+      addPostMultiply: 5
+      clampEndResultMin: 0
+      clampEndResultMax: 1
+      useCustomPositioning: 0
+      spaceDistortion: []
+    SurfaceLand:
+      name: Grass
+      material: {fileID: 0}
+      texturesAtlasOrigin: {x: 0, y: 0.875}
+      color: {r: 0.46316123, g: 1, b: 0, a: 1}
+    SurfaceUnderwater:
+      name: Sand
+      material: {fileID: 0}
+      texturesAtlasOrigin: {x: 0.25, y: 0.875}
+      color: {r: 1, g: 0.93057823, b: 0, a: 1}
+    Underground:
+      name: Rock
+      material: {fileID: 0}
+      texturesAtlasOrigin: {x: 0.875, y: 0.875}
+      color: {r: 0.6509434, g: 0.6509434, b: 0.6509434, a: 1}
+    scatterDecoratives:
+    - {fileID: 919132149155446097, guid: 1191ce3432fffee4db5a9a2f1652a63e, type: 3}
+    treeType: 0
+    treeDensity: 0.01
+    grassDensity: 0.1
+    scatterDensity: 0.05
+    generateGrass: 1
+    treeWaterTollerance: 0
+  - point_in_Biome_Value_Space: {x: 0.8, y: 0.8, z: 0.8}
+    noises:
+    - resultApplicationID: 0
+      seed: 6
+      weight: 0
+      cellular: 1
+      cellularMethodID: 2
+      position: {x: 0, y: 0, z: 0, w: 0}
+      interpolationMethodID: 0
+      noiseDimensionCount: 4
+      scale: {x: 1, y: 1, z: 1, w: 1}
+      rotation: {x: 0.9, y: 0.25, z: 0.1, w: 0.23}
+      octaveStartSize: 2
+      octaveCount: 4
+      octaveStepPow: 2
+      octaveInfluenceBias: 1.585
+      planarize: 1
+      planarizeAtY: 0
+      planarizeIntensity: 0.05
+      choppy: 1
+      turbulent: 1
+      invert: 1
+      dotsPerCell: 6
+      multiplyWith: 1
+      addPostMultiply: 0
+      clampEndResultMin: 0
+      clampEndResultMax: 1
+      useCustomPositioning: 0
+      spaceDistortion: []
+    SurfaceLand:
+      name: Grass
+      material: {fileID: 0}
+      texturesAtlasOrigin: {x: 0, y: 0.875}
+      color: {r: 0, g: 0.69803923, b: 0.30490738, a: 1}
+    SurfaceUnderwater:
+      name: Sand
+      material: {fileID: 0}
+      texturesAtlasOrigin: {x: 0.25, y: 0.875}
+      color: {r: 0.8301887, g: 0.5449044, b: 0.1461967, a: 1}
+    Underground:
+      name: Rock
+      material: {fileID: 0}
+      texturesAtlasOrigin: {x: 0.875, y: 0.875}
+      color: {r: 0.31651238, g: 0.4433962, b: 0.36252275, a: 1}
+    scatterDecoratives:
+    - {fileID: 919132149155446097, guid: 1191ce3432fffee4db5a9a2f1652a63e, type: 3}
+    treeType: 1
+    treeDensity: 0.01
+    grassDensity: 0.1
+    scatterDensity: 0.05
+    generateGrass: 1
+    treeWaterTollerance: 0
+  effectorObjects: []
+  PipelineStepsPerSecond: 0
+  chunksToLoadAround: 60
+  mapLimitsPlusMinusInChunks: 186
+  PipelineStepsPerFrameCap: 10
+  offsetAfterChunkCount: 3
+  diagonalMode: 1
+  generateDecoratives: 1
+  barnicling: 1
+  forceConvex: 0
+  oceanHeight: -4.98
+  cloudHeight: 20
+  instancedRendering: 0
+  usingPreBoundGen: 0
+  startBoundsFill:
+    m_Center: {x: 1, y: 1, z: 1}
+    m_Extent: {x: 1, y: 1, z: 1}
+  clampToStartingBounds: 0
+  CPU_NOISE: 0
+  densityToRealityBorder: 0.5
+  enableFirstSyncPoint: 0
+  biomeBlendDistance: 1
+  defaultMaterial: {fileID: 2100000, guid: d4ac92c455f896b48874c8bb3e487359, type: 2}
+  instanceMaterial: {fileID: 2100000, guid: 16e37a4d9bc896c45a743e3df23a0172, type: 2}
+  Sphere: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  Cone: {fileID: 3613567641014311022, guid: 3f13a508285354c41b0f73d6eff17427, type: 3}
+  ValueNoiseNearestNeigbor: {fileID: 7200000, guid: cf6d7df66fa13374f91d60a7e94985d8, type: 3}
+  ValueNoiseLinear: {fileID: 7200000, guid: 356475f52aa3a30459347abf6f035ac9, type: 3}
+  ValueNoiseCosine: {fileID: 7200000, guid: f2157040f2ea969429ad7aebb455fae3, type: 3}
+  ValueNoiseCustomCosine: {fileID: 7200000, guid: 9f0eb9474439e2e40b8b8be864f4cc76, type: 3}
+  ValueNoiseCubic: {fileID: 7200000, guid: d3bf6986a6c32e943a8afc8a483bd09b, type: 3}
+  ValueNoiseCustomHermite: {fileID: 7200000, guid: 83b39ef375c89974dbf95b42cefcfdfa, type: 3}
+  CellNoiseOneDPC: {fileID: 7200000, guid: f1c5802c35a406f4e98b23c831d6310e, type: 3}
+  CellNoiseTwoDPC: {fileID: 7200000, guid: 39e2027defc52634b8d7cb89452606cf, type: 3}
+  CellNoiseThreeDPC: {fileID: 7200000, guid: b7bb0df925f55e9409d115352cbbf6a0, type: 3}
+  CellNoiseFourDPC: {fileID: 7200000, guid: 982c3bef92e7aa34aa4b22f4d416ec91, type: 3}
+  CellNoiseFiveDPC: {fileID: 7200000, guid: 52bf84bb7d27c5743815a1c1a62522d6, type: 3}
+  CellNoiseSixDPC: {fileID: 7200000, guid: a00e247640dd24240853ab2b823ba426, type: 3}
+  gradientBottom: 0
+  gradientTop: 0
+  mapColorGradient:
+    serializedVersion: 2
+    key0: {r: 1, g: 1, b: 1, a: 1}
+    key1: {r: 1, g: 1, b: 1, a: 1}
+    key2: {r: 0, g: 0, b: 0, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 65535
+    ctime2: 0
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 2
+    m_NumAlphaKeys: 2
+  ocean: {fileID: 2152565031278104733}
+  clouds: {fileID: 384066707725345538}
+  helper: {fileID: 0}
+  camera: {fileID: 0}
+  pointOfChunkOfRelevance:
+    x: 0
+    y: 0
+    z: 0
+  globalOffset:
+    x: 0
+    y: 0
+    z: 0
+  sphericalOffsetLookUpTable: []
+  timeSincePlay: 0
+  chunksLoadedSincePlay: 0
+  profilerKillswitch: 0
+  startUpTime: 0
+--- !u!1 &384066707725345538
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8885405805750180067}
+  - component: {fileID: 1428232646784301350}
+  - component: {fileID: 3773217554174484178}
+  m_Layer: 0
+  m_Name: Clouds (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8885405805750180067
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 384066707725345538}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 20, z: 0}
+  m_LocalScale: {x: 100, y: 100, z: 100}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7958260763888951103}
+  m_Father: {fileID: 6859783074629745707}
+  m_RootOrder: -1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &1428232646784301350
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 384066707725345538}
+  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &3773217554174484178
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 384066707725345538}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 1041f4b28512cb245b42bfb07cc6ac7e, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &2152565031278104733
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4483828378163861072}
+  - component: {fileID: 823972785618534717}
+  - component: {fileID: 889153634821486214}
+  - component: {fileID: 6437980854783865852}
+  m_Layer: 0
+  m_Name: Ocean (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4483828378163861072
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2152565031278104733}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: -5, z: 0}
+  m_LocalScale: {x: 100, y: 100, z: 100}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6859783074629745707}
+  m_RootOrder: -1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &823972785618534717
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2152565031278104733}
+  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &889153634821486214
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2152565031278104733}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: a41cd35d870fe0141a8d3adedbba786d, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &6437980854783865852
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2152565031278104733}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &7317161129861458780
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7958260763888951103}
+  - component: {fileID: 4437800948727402310}
+  - component: {fileID: 5792426338193057068}
+  m_Layer: 0
+  m_Name: Clouds (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7958260763888951103
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7317161129861458780}
+  m_LocalRotation: {x: 1, y: 0, z: 0, w: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8885405805750180067}
+  m_RootOrder: -1
+  m_LocalEulerAnglesHint: {x: 180, y: 0, z: 0}
+--- !u!33 &4437800948727402310
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7317161129861458780}
+  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5792426338193057068
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7317161129861458780}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 1041f4b28512cb245b42bfb07cc6ac7e, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
