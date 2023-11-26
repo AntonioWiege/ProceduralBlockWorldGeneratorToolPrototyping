@@ -3,7 +3,7 @@
 
 Supported Platforms: Windows (10 & 11), Mac (Intel & M1)
 Remember to set the build platform. 
-Originally 2022.2.11f1; Test with latest 2023 version show possible shader errors and crashes with open tool inspector on play mode.
+Originally 2022.2.11f1; Uses default 3D built-in pipeline; Test with latest 2023 version show possible shader errors and crashes with open tool inspector on play mode.
 
 Not a functioning tool. No save, load, export, etc.
 An online copy of code to share privately. NOT free for use or open source, but good luck if you're learning this stuff.
