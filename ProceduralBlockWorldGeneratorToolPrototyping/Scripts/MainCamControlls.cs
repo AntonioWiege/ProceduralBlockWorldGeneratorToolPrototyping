@@ -6,20 +6,30 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
     public class MainCamControlls : MonoBehaviour
     {
         new Camera camera;
+
         public float speed = 10f;
         public float sensitivityX = 10, sensitivityY = 10;
+
         public bool alreadyCalledThisFrame = false;
+
         private Vector3 cameraAngles;
         private float rotX = 0f, rotY = 0f;
+
         public List<LandscapeTool> landscapeTools = new List<LandscapeTool>();
+
+
         private void Awake()
         {
             camera = GetComponent<Camera>();
         }
+
+
         private void Update()
         {
             alreadyCalledThisFrame = false;
         }
+
+
         /// <summary>
         /// Called from LandscapeTool
         /// </summary>
@@ -63,7 +73,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         }
 
         /// <summary>
-        /// Calculate offset to clamp camera into high precision space; and call to apply.
+        /// Calculate offset to clamp camera into high precision space.
         /// </summary>
         public void GlobalOffsetAdjustment()
         {

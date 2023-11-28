@@ -16,11 +16,12 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         {
             float[] data = null;
 
-            if (!useCPUinsteadOfGPU)
+            if (!useCPUinsteadOfGPU)//using GPU
             {
 
                 ComputeShader cs;
 
+                //pick compute shader by setup
                 if (setup.cellular)
                 {
                     switch (setup.dotsPerCell)
@@ -70,6 +71,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     }
                 }
 
+                //send configuration data to GPU
                 cs.SetInt("dispatchThreadGroupCountX", dispatchSize);
                 cs.SetVector("size", setup.scale);
                 cs.SetVector("rotation", setup.rotation);
@@ -93,6 +95,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                 cs.SetFloat("clampEndResultMax", setup.clampEndResultMax);
                 cs.SetInt("cellularMethodID", setup.cellularMethodID);                   
                 ComputeBuffer redefinedSpace;
+                //execute depending on dimension
                 switch (dispatchDimensions)
                 {
                     case 2:
@@ -127,12 +130,10 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                 redefinedSpace.Dispose();
                 if (pullDataFromGPU) { data = dispatchDimensions == 2 ? new float[dispatchSize * dispatchSize] : new float[dispatchSize * dispatchSize * dispatchSize]; resultBuffer.GetData(data); }
                 if (disposeBufferAfterward) { resultBuffer.Dispose(); resultBuffer = null; }
-
-
             }
-            else
+            else//using CPU
             {
-                //in case of CPU noise computation one may not use GPU buffers and will instead pass the float[] to work upon
+                //in case of CPU noise computation one may not use GPU buffers and will instead pass the float[] to work upon in another class
                 //this will not grab contents from the result buffer itself
                 noiseCPU.PopulateNoise(key, setup, cpuData, setup.seed, dispatchDimensions, dispatchSize);
                 data = cpuData;

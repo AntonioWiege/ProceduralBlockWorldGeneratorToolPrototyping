@@ -24,7 +24,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _HeightMap:
-        m_Texture: {fileID: 2800000, guid: 79bd80828f8b2d1498a84d4ae657cf64, type: 3}
+        m_Texture: {fileID: 2800000, guid: 3e29a6ea2af923540b3de83a6cae110c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -41,9 +41,9 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _AO: 0.158
+    - _AO: 0.232
     - _AtlasRes: 8
-    - _ComputeMul: 1
+    - _ComputeMul: 0.601
     - _Discard: 0
     - _Empty: 0.5
     - _FirstOffset: 0.1
@@ -52,13 +52,14 @@ Material:
     - _HDI2: 1
     - _Height: 0.05
     - _HeightDeltaInfluence: 1
+    - _HeightOffset: 0.5
     - _Metallic: 0.416
     - _Mul: 1.16
-    - _NormInts: 1
-    - _ReNormal: 0
+    - _NormInts: 0.66
+    - _ReNormal: 1
     - _ReRange: 1
     - _Scroll: 0
-    - _Shadows: 0.5
+    - _Shadows: 0.8699
     - _Shine: 0
     - _Smoothness: 0.5
     - _SsD: 0.03

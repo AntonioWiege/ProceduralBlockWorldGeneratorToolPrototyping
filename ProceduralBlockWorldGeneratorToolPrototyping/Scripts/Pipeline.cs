@@ -9,10 +9,13 @@ using System.Linq;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 
-//a word on threading in the main script
-
 namespace ProceduralBlockWorldGeneratorToolPrototyping
 {
+    /// <summary>
+    /// <br>Collection of Methods to process Chunks. Each step separately.</br>
+    /// <br>On Update:</br>
+    /// <br>Determines Chunk with highest need of further processing and processes it.</br>
+    /// </summary>
     public class Pipeline
     {
         LandscapeTool directorInstance;
@@ -36,13 +39,12 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             Profiler.BeginSample("ProcessMostRelevantChunkInNeed");
 #endif
             hadToWork = false;
-            //if (directorInstance.chunksUnderConstruction.Count > 0)
-            //{
+
                 for (int i = 0; i < directorInstance.chunksToLoadAround; i++)
                 {
                     Int3 pos = directorInstance.pointOfChunkOfRelevance + directorInstance.sphericalOffsetLookUpTable[i];
-                    if (!directorInstance.withinLimit(pos)) continue;
-                    if (!directorInstance.chunks.ContainsKey(pos))
+                    if (!directorInstance.withinLimit(pos)) continue;//ignore out of bounds
+                    if (!directorInstance.chunks.ContainsKey(pos))//create all within loading distance
                     {
                     directorInstance.RequestPiece(pos,true);
                     }
@@ -54,14 +56,14 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     }
                     break;
                 }
-            //}
+
 #if !Deactivate_Profiling
             Profiler.EndSample();
 #endif
         }
 
 
-
+        /// <summary>Let's all steps necessary to reach target state be taken with the passed Chunk</summary>
         public Chunk ForceChunkUpToState(Chunk c, int state)
         {//Depending on the chunks genState proceed accordingly
 #if !Deactivate_Profiling
@@ -105,34 +107,34 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         }
 
 
-
+        /// <summary>First Step. From state -1 to 0. </summary>
         public Chunk CreateAndInitializeChunk(Int3 chunkPos)
         {
 #if !Deactivate_Profiling
             Profiler.BeginSample("Creating Chunk with key " + chunkPos.ValueSetOnly_ToString());
 #endif
             directorInstance.chunksLoadedSincePlay++;
+
             //create & init chunk
             var c = new GameObject("Chunk " + chunkPos.ValueSetOnly_ToString()).AddComponent<Chunk>();
             c.directorInstance = directorInstance;
-
-            c.genState = -1;
-#if !Deactivate_Async
-            if (!directorInstance.chunksUnderConstruction.Contains(c))
-#endif
-                directorInstance.chunksUnderConstruction.Add(c);
+            c.key = chunkPos;
+            c.genState = -1;//indicate id in initial setup stage
             c.transform.parent = directorInstance.transform;
-            //c.transform.position = (chunkPos- directorInstance.globalOffset).AsVector3 * LandscapeTool.ChunkScale * LandscapeTool.BlockScale;
             c.transform.position = (chunkPos + directorInstance.globalOffset).AsVector3 * LandscapeTool.ChunkScale * LandscapeTool.BlockScale;
+            directorInstance.currentlyVisibleChunks.Add(c);
+
 #if Deactivate_Async
             directorInstance.chunks.Add(chunkPos, c);
 #else
             directorInstance.chunks.TryAdd(chunkPos, c);
+            if (!directorInstance.chunksUnderConstruction.Contains(c))
 #endif
-            directorInstance.currentlyVisibleChunks.Add(c);
+                directorInstance.chunksUnderConstruction.Add(c);
 
+            //setup Mesh
             c.updateAllBlocks = true;
-            c.key = chunkPos;
+            c.updateDecorations = true;
             c.mf = c.gameObject.AddComponent<MeshFilter>();
             c.mc = c.gameObject.AddComponent<MeshCollider>();
             c.mr = c.gameObject.AddComponent<MeshRenderer>();
@@ -141,20 +143,14 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             c.m.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
             c.m.MarkDynamic();
 
-            var child = new GameObject("Decoratives");
-            child.transform.parent = c.transform;
-            child.AddComponent<MeshFilter>();
-            child.AddComponent<MeshCollider>();
-            child.AddComponent<MeshRenderer>();
-            c.updateDecorations = true;
-
             c.blocks = new Block[LandscapeTool.ChunkScale * LandscapeTool.ChunkScale * LandscapeTool.ChunkScale];
-            c.tint = new Color[LandscapeTool.ChunkScale * LandscapeTool.ChunkScale * LandscapeTool.ChunkScale];
+            //fill with air
             for (int i = 0; i < c.blocks.Length; i++)
             {
-                c.blocks[i] = new Block() { blockShape = Block_Library.Air.blockShape, matter = Block_Library.Air.matter, meshSection = Block_Library.Air.meshSection };
+                c.blocks[i] = Block_Library.Air;
             }
 
+            c.tint = new Color[LandscapeTool.ChunkScale * LandscapeTool.ChunkScale * LandscapeTool.ChunkScale];
             //tint by gradient from inspector
 #if Deactivate_Async
   for (int z = 0; z < LandscapeTool.ChunkScale; z++)
@@ -190,7 +186,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                 });
 #endif
 
-            c.genState = 0;
+            c.genState = 0;//initial setup completed
 
 #if !Deactivate_Profiling
             Profiler.EndSample();
@@ -199,15 +195,14 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             return c;
         }
 
-
-
+        /// <summary>Second Step. Generates the all relevant biomes combined and weighted density for each block instances and loads it into the chunk</summary>
         public Chunk DensityNoiseGen(Chunk c)
         {
 #if !Deactivate_Profiling
             Profiler.BeginSample("DensityNoiseGen on " + c.ToString());
 #endif
 
-            ForceChunkUpToState(c, 0);
+            ForceChunkUpToState(c, 0);//First step needs to be done before this can begin
 
             ComputeBuffer resultBuffer = new ComputeBuffer(LandscapeTool.ChunkScale * LandscapeTool.ChunkScale * LandscapeTool.ChunkScale, sizeof(float));
             resultBuffer.SetData(new float[LandscapeTool.ChunkScale * LandscapeTool.ChunkScale * LandscapeTool.ChunkScale]);
@@ -219,7 +214,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             float[] cube_moisture = directorInstance.noiseHandler.Execute(c.key, directorInstance.BiomeValues_Moisture, resultBuffer, false, true, LandscapeTool.ChunkScale, 3, directorInstance.CPU_Noise, cpuDat);
             float blendDistance = directorInstance.biomeBlendDistance* Mathf.Pow(3, 1 / 3f);// var cubicDiagonal = Mathf.Pow(3,1/3f);
 
-            //get nearby biomes in inspetor defined range
+            //get nearby biomes in inspector defined range
             HashSet<Biome> nearbyBiomesSet = new();
             int idOfClosest=0;
             float distanceOfClosest=99999;
@@ -253,6 +248,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 
             for (int i = 0; i < nearbyBiomes.Length; i++)
             {
+                //iterate through all noise entries within the biome, processing on the same buffer with every new noise pass, before finally reading it out
                 for (int o = 0; o < nearbyBiomes[i].noises.Count - 1; o++)
                 {
                                        _ = directorInstance.noiseHandler.Execute(c.key, nearbyBiomes[i].noises[o], resultBuffer, false, false, LandscapeTool.ChunkScale, 3, directorInstance.CPU_Noise,cpuDat);
@@ -264,35 +260,36 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 
             float[] density = new float[LandscapeTool.ChunkScale * LandscapeTool.ChunkScale * LandscapeTool.ChunkScale];
 
+            //Get & store the primary biome per block and calculate the exact density by distance based blending
 #if Deactivate_Async
-            float[] distances = new float[a.Length];
-            float[] influences = new float[a.Length];
+            float[] distances = new float[nearbyBiomes.Length];
+            float[] influences = new float[nearbyBiomes.Length];
             for (int i = 0; i < density.Length; i++)
             {
-                Biome closest = a[0];
+                Biome closest = nearbyBiomes[0];
                 var v = new Vector3(cube_temperature[i], cube_variety[i], cube_moisture[i]);
                 float delta = Vector3.Distance(v, closest.point_in_Biome_Value_Space);
-                for (int o = 1; o < a.Length; o++)
+                for (int o = 1; o < nearbyBiomes.Length; o++)
                 {
-                    var d = Vector3.Distance(v, a[o].point_in_Biome_Value_Space);
+                    var d = Vector3.Distance(v, nearbyBiomes[o].point_in_Biome_Value_Space);
                     distances[o] = d;
                     if (d < delta)
                     {
                         delta = d;
-                        closest = a[o];
+                        closest = nearbyBiomes[o];
                     }
                 }
 
                 c.primaryBiomeID[i] = directorInstance.biomes.IndexOf(closest);
 
                 float total = 0f;
-                for (int d = 0; d < a.Length; d++)
+                for (int d = 0; d < nearbyBiomes.Length; d++)
                 {
                     influences[d] = Mathf.Clamp01((blendDistance - (distances[d] - delta)) / blendDistance);
                     total += influences[d];
                 }
                 density[i] = 0;
-                for (int d = 0; d < a.Length; d++)
+                for (int d = 0; d < nearbyBiomes.Length; d++)
                 {
                     density[i] += block_densities[d][i] * influences[d] / total;
                 }
@@ -333,22 +330,6 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             });
 #endif
 
-
-            /*//originalGPU
-            float[] density = null;
-            for (int i = 0; i < directorInstance.biomeOne.noises.Count-1; i++)
-            {
-                density = directorInstance.noiseHandler.Execute(c.key, directorInstance.biomeOne.noises[i], resultBuffer, false, false, LandscapeTool.ChunkScale, 3, 0.5f);
-            }
-            density = directorInstance.noiseHandler.Execute(c.key, directorInstance.biomeOne.noises.Last(), resultBuffer, true, true, LandscapeTool.ChunkScale, 3, 0.5f);//*/
-            /*//testingCPU
-            var density = new float[LandscapeTool.ChunkScale * LandscapeTool.ChunkScale * LandscapeTool.ChunkScale];
-            for (int i = 0; i < directorInstance.biomeOne.noises.Count - 1; i++)
-            {
-                density = directorInstance.noiseHandler.Execute(c.key, directorInstance.biomeOne.noises[i], null, false, false, LandscapeTool.ChunkScale, 3, 0.5f,true,density);
-            }
-            density = directorInstance.noiseHandler.Execute(c.key, directorInstance.biomeOne.noises.Last(), null, true, true, LandscapeTool.ChunkScale, 3, 0.5f,true,density);//*/
-
             c.densityMap = density;
             c.updateAllBlocks = true;
             c.genState = 1;
@@ -362,9 +343,6 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 
 
 
-        /*
-         Force chunk neighbors up to state & perform opotional blur & erosion passes
-         */
 
 
         public Chunk DensityToBlocks(Chunk c)
@@ -375,6 +353,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 
             ForceChunkUpToState(c, 1);
 
+            //high density turns to rock, low to air. 
 #if Deactivate_Async
             for (int i = 0; i < c.densityMap.Length; i++)
             {
@@ -426,7 +405,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 
 
 #if Deactivate_Async
-            foreach (var item in c.surroundChunks)//once this chunk finishes it's contents the neighbors have to update; PUSH post decor instance later
+            foreach (var item in c.surroundChunks)//once this chunk finishes it's contents the neighbors have to update
             {
                 if (item == null) continue;
                 item.updateAllBlocks = true;
@@ -450,6 +429,10 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 #endif
             c.updateAllBlocks = true;
 
+            /*
+             If decoratives have already been generated once, but the existence of blocks has changed,
+            the instances may need to be either translated orthogonally along axis Y or be removed.
+             */
             if (c.alreadyDecorated)
             {
                 for (int i = 0; i < c.decoPositions.Count; i++)
@@ -594,7 +577,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     var item = c.scatteredPositions[i];
                     if (item.ToLinearChunkScaleIndex() >= c.densityMap.Length)
                     {
-                        MonoBehaviour.Destroy(c.scatteredObjects[i]);continue;
+                        Object.Destroy(c.scatteredObjects[i]);continue;
                     }
                     if (c.densityMap[item.ToLinearChunkScaleIndex()] >= directorInstance.densityToRealityBorder || c.blocks[item.ToLinearChunkScaleIndex()].meshSection.verts.Length > 1)
                         {
@@ -627,7 +610,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                             if (!success)
                             {
                                 c.scatteredPositions.RemoveAt(i);
-                                MonoBehaviour.Destroy(c.scatteredObjects[i]);
+                                Object.Destroy(c.scatteredObjects[i]);
                                 c.scatteredObjects.RemoveAt(i);
                             }
                         }
@@ -652,7 +635,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                             if (!success)
                             {
                                 c.scatteredPositions.RemoveAt(i);
-                                MonoBehaviour.Destroy(c.scatteredObjects[i]);
+                                Object.Destroy(c.scatteredObjects[i]);
                                 c.scatteredObjects.RemoveAt(i);
                             }
                         }
@@ -660,7 +643,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     else
                     {
                         c.scatteredPositions.RemoveAt(i);
-                        MonoBehaviour.Destroy(c.scatteredObjects[i]);
+                        Object.Destroy(c.scatteredObjects[i]);
                         c.scatteredObjects.RemoveAt(i);
                     }
                 }
@@ -677,23 +660,16 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         /*
             Foliage & Details Pass.
         Force chunk above to be there.
-        Check all surface bottom full top free blocks and perform height above check.
+        Check all surface: bottom full, top free blocks; perform height above check.
         Set blocks & spawn details as necessary.
-        => need new block types for simple grass (above & underwater) optionally more.
-        The grass & other new mesh variants should follow the vertice count of the block and the shader block pass should contain a variable to distinguish the types to construct.
-        + feature to randomly throw in gameObjects that are put into the biome collection if space checks out
          */
-
-        /*
-         !!! this needs to move to a separate logic layer. So that the decoration generation doesnt depend on itself on regeneration
-         */
-
 
         public Chunk DecorativesAndDiagonalsPass(Chunk c)
         {
 #if !Deactivate_Profiling
             Profiler.BeginSample("Decorate on " + c.ToString());
 #endif
+          //if decoratives disabled, generation skipped. Generation commonly only happens once and the results get adjusted on regeneration.
             if (directorInstance.generateDecoratives && !c.alreadyDecorated && c.updateDecorations)
             {
                 ForceChunkUpToState(c, 2);
@@ -831,13 +807,14 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             return c;
         }
 
-        /*
-         Now works with a parallel system, which measn the voxelized trees will need a custom implementation of brush add, aswell as brush later too.  Which also means a custom diagonals pass unless make it perfeclty replacable. The later should be the goal
-         */
+
         public void InsertTree(Biome bio, Chunk c, Chunk chunkAbove, int x, int y, int z)
         {
             if (bio.treeType == TreeType.none) return;
-            int height = 1;
+
+            //Generates different trees of different scales|ages
+
+            int height;
             var pos = new Int3(x, y, z);
             TreeInstance tree = new TreeInstance();
             c.trees.Add(tree);
@@ -848,7 +825,6 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     height = Random.Range(5, 16);
                     for (int i = 0; i < height; i++)
                     {
-                       // if (CheckUp(c, pos, i)) { height = i; break; }
                    if(pos.y + 1 < LandscapeTool.ChunkScale)     if (c.blocks[(pos + Int3.up).ToLinearChunkScaleIndex()].blockShape.covers != BlockSides.none) { height = i; break; }
                         tree.decoPositions.Add(new Int3(0, i, 0));
                         tree.decoBlocks.Add(Block_Library.Wood);
@@ -870,13 +846,11 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     }
 
                     directorInstance.helper.transform.localScale = Vector3.one;
-                    //directorInstance.helper.SetActive(false);
                     break;
                 case TreeType.pine://random height from five to fifteen blocks with cone starting at block three and scaling up to tip
                     height = Random.Range(5, 16);
                     for (int i = 0; i < height; i++)
                     {
-                        // if (CheckUp(c, pos, i)) { height = i; break; }
                         if (pos.y + 1 < LandscapeTool.ChunkScale) if (c.blocks[(pos + Int3.up).ToLinearChunkScaleIndex()].blockShape.covers != BlockSides.none) { height = i; break; }
                         tree.decoPositions.Add(new Int3(0, i, 0));
                         tree.decoBlocks.Add(Block_Library.Wood);
@@ -898,7 +872,6 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     }
 
                     directorInstance.helper.transform.localScale = Vector3.one;
-                    //directorInstance.helper.SetActive(false);
                     break;
                 case TreeType.cactus://one to seven blocks high with an optional arm any four directions at step height three, which forces the height to at least five
                     bool arm = Random.value > 0.9f;
@@ -907,7 +880,6 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 
                     for (int i = 0; i < height; i++)
                     {
-                        // if (CheckUp(c, pos, i)) { height = i; break; }
                         if (pos.y + 1 < LandscapeTool.ChunkScale) if (c.blocks[(pos+Int3.up).ToLinearChunkScaleIndex()].blockShape.covers != BlockSides.none) { height = i; break; }
                         tree.decoPositions.Add(new Int3(0, i, 0));
                         tree.decoBlocks.Add(Block_Library.Cactus);
@@ -915,7 +887,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     if (height == 0) return;
                     if (arm)
                     {
-                        switch (Random.Range(0, 4))//already checked bounds, there is enough space for the arm
+                        switch (Random.Range(0, 4))
                         {
                             case 1:
                                 tree.decoPositions.Add(new Int3(1, 2, 0));
@@ -971,6 +943,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             tree.decoBlocks[0].blockShape = BlockShape_Library.foot;
         }
 
+        /// <summary>Underwawter grass is like regular grass, that grew up to a boundary </summary>
         public void InsertUnderwaterGrass(Biome bio, Chunk c, Chunk chunkAbove, int x, int y, int z, int distanceToSurface)
         {
             int height = distanceToSurface;
@@ -985,19 +958,14 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                 tree.decoBlocks.Add(Block_Library.UnderwaterGrass);
             }
             if (height == 0) return;
-            //tree.decoBlocks[0].blockShape = BlockShape_Library.foot;
         }
 
         public bool CheckUp(Chunk c, Int3 pos, int i)
         {
-            //if(i==0)Debug.Log(directorInstance.GetBlock(c.key * LandscapeTool.ChunkScale + (pos + Int3.up * i)).block.blockShape.covers);
-            //return directorInstance.GetBlock(c.key * LandscapeTool.ChunkScale + (pos + Int3.up * i)).block.blockShape.meshSections[0].verts.Length==0;
-            //return directorInstance.GetBlock(c.key * LandscapeTool.ChunkScale + (pos + Int3.up * (i+1))).block.matter != Matter_Library.Air;
             return directorInstance.GetBlock(c.key * LandscapeTool.ChunkScale + (pos + Int3.up * (i + 1))).block.blockShape.covers != BlockSides.none;
-            //return false;
         }
 
-
+        /// <summary>Update and combine block meshes</summary>
         public Chunk BlocksToMesh(Chunk c)
         {
 #if !Deactivate_Profiling
@@ -1051,8 +1019,6 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                 {
                     for (int i = 0; i < item.decoPositions.Count; i++)
                     {
-                        //*//goes out of bounds beyond one chunk, skipping reduction in this instance
-                        //item.decoBlocks[i].UpdateMeshSection(item.chunkSpaceOrigin + item.decoPositions[i],c);
                         item.decoBlocks[i].meshSection = VerTriSides.CombineShape(item.decoBlocks[i].blockShape, BlockSides.none, (item.chunkSpaceOrigin + item.decoPositions[i]).ToVector3() * LandscapeTool.BlockScale);
                     }
                 }
@@ -1067,7 +1033,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         }
 
 
-
+        /// <summary>Finalize Mesh</summary>
         public Chunk MeshCombinationAndColoring(Chunk c)
         {
 #if !Deactivate_Profiling
@@ -1119,7 +1085,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         }
 
 
-
+        /// <summary>Analyse the surroundings and pick the correct shape for every block</summary>
 #if Deactivate_Async
    void DealWithTheDiagonals(Chunk c)
         {

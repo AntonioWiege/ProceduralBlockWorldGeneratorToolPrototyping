@@ -9,47 +9,68 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
     [Serializable]//to make it show up in the inspector
     public class BrushAndSculpt
     {
-
+        #region variables
         //User defined
         [Tooltip("Effect Type")]
         public BrushType brushType = BrushType.shape;
+
         [Tooltip("Effect Distribution")]
         public BrushMode brushMode;
+
         [Tooltip("To voxelize & use as stamp")]
         public Mesh meshToBrush;
+
         [Tooltip("Reference to take from Matter Library")]
         public string matterToSet = "Grass";
+
         [Tooltip("Reference to take from Block Library")]
         public string blockToSet = "Rock";
+
         [Tooltip("Overwrite block tint")]
         public Color colorToPaint = Color.cyan;
+
         [Tooltip("Primary & Secondary random affectors")]
         public float randomA = 0.1f, randomB = 0.1f;
+
         [Tooltip("Custom falloff curve for non mesh brush (std linear), needs to be set at runtime")]
         public AnimationCurve falloff = new AnimationCurve();
+
         [Tooltip("in meters")]
         [Range(.1f, 30)]
         public float scaleRadius = 1f;//brush has base scale this is mod later think BuffFoat&CoKG^tm
+
         [Tooltip("Rotation of brush is controlled via secondary axis UIOJKL -z+x+z-y-x+y")]
         public Quaternion rotation = Quaternion.identity;
 
         //System defined
         LandscapeTool directorInstance;
+
         Mesh previousMesh;
+
         float previousRadius = -1f;
+
         Quaternion previousRotation;
+
         bool previousConvexState;
+
         bool LeftClick;
+
         [Tooltip(" if any of the previous values != the new ones => the mesh needs to be revoxelized"), HideInInspector]
         public List<Vector3> voxelPositions = new();
 
         float value = 0;
+
         Int3 pos = Int3.zero;
+
         int scaleRadiusInBlocks = 0;
+
+        #endregion
 
         public BrushAndSculpt(LandscapeTool inCharge)
         {
             directorInstance = inCharge;
+            //create basic linear falloff in animationCurve instance
+            falloff.ClearKeys();
             falloff.AddKey(0, 0);
             falloff.AddKey(1, 1);
             falloff.AddKey(-1, -1);
@@ -58,10 +79,10 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 
         public void Update()
         {
-            //Update scale & rotation
+            //Update scale
             scaleRadius = Mathf.Clamp(scaleRadius + scaleRadius * Input.GetAxisRaw("Mouse ScrollWheel"), 0.1f, 300);
             scaleRadiusInBlocks = (int)(scaleRadius / LandscapeTool.BlockScale);
-
+            //Update rotation (like QWEASD but UIOJKL)
             rotation *= Quaternion.Euler((Input.GetKey(KeyCode.I) ? 1 : 0) - (Input.GetKey(KeyCode.K) ? 1 : 0), (Input.GetKey(KeyCode.J) ? 1 : 0) - (Input.GetKey(KeyCode.L) ? 1 : 0), (Input.GetKey(KeyCode.U) ? 1 : 0) - (Input.GetKey(KeyCode.O) ? 1 : 0));
 
             //Regenerate Mesh on Change
@@ -188,17 +209,19 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     break;
             }
         }
+
+
         void Erode(bool directional)
         {
             var val = value;
-            var sop = pos;
-            if (meshToBrush == null)
+            var org_pos = pos;
+            if (meshToBrush == null) //no mesh => regular radius based brush
             {
-                if (scaleRadius < LandscapeTool.BlockScale)
+                if (scaleRadius < LandscapeTool.BlockScale)//only 1 pos to address
                 {
                     SubErode(pos, value, directional);
                 }
-                else
+                else //multiple within radius to address
                 {
                     int r = scaleRadiusInBlocks;
                     for (int z = -r; z <= r; z++)
@@ -209,30 +232,34 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                             {
                                 var m = new Vector3(x * LandscapeTool.BlockScale, y * LandscapeTool.BlockScale, z * LandscapeTool.BlockScale).magnitude;
                                 if (m > scaleRadius) continue;
-                                pos = sop + new Int3(x, y, z);
+                                pos = org_pos + new Int3(x, y, z);
                                 SubErode(pos, value * falloff.Evaluate(1f - m / scaleRadius), directional);
                             }
                         }
                     }
                 }
             }
-            else
+            else //mesh => use voxelized positions
             {
                 for (int i = 0; i < voxelPositions.Count; i++)
                 {
-                    pos = sop + (voxelPositions[i] * 3).ToInt3();
+                    pos = org_pos + (voxelPositions[i] * 3).ToInt3();
                     SubErode(pos, value, directional);
                 }
             }
             value = val;
-            pos = sop;
+            pos = org_pos;
         }
         public void SubErode(Int3 pos, float value, bool directional = false)
         {
+            //for each block of a local snapshot store chunk, pos & value for quick reference
             Chunk[] chunks = new Chunk[3 * 3 * 3];
             Int3[] localPos = new Int3[3 * 3 * 3];
             float[] densitySnapshot = new float[3 * 3 * 3];
-            //pos -= directorInstance.globalOffset*LandscapeTool.ChunkScale;
+
+            //int centerID = 13;//1+3+9
+
+            //take snapshot of last state of densities
             for (int z = -1; z < 2; z++)
             {
                 for (int y = -1; y < 2; y++)
@@ -241,7 +268,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     {
                         var index = (x + 1) + (y + 1) * 3 + (z + 1) * 3 * 3;
                         var subPos = pos + new Int3(x, y, z);
-                        var cp = W.GridFloor(subPos, LandscapeTool.ChunkScale);
+                        var cp = FloorToGrid.GridFloor(subPos, LandscapeTool.ChunkScale);
                         chunks[index] = directorInstance.RequestPiece(cp, true);//unchecked map bounds
                         localPos[index] = subPos - (cp * LandscapeTool.ChunkScale);//unchecked array bounds
                         directorInstance.pipeline.ForceChunkUpToState(chunks[index], 1);
@@ -250,6 +277,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                 }
             }
 
+            //make edits based on the snapshot
             if (directional)
             {
                 for (int z = -1; z < 2; z++)
@@ -258,23 +286,21 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     {
                         for (int x = -1; x < 2; x++)
                         {
-                            /*
-                             * only the center block gets and adds
-                            others set density to snapshot - value times dot erosion direction, either own or center block base value
-                             */
+                            /*  only the center block gets and adds based of the snapshot
+                            others set density to snapshot - value times dot erosion direction, either own or center block base value*/
                             if (x == 0 && y == 0 && z == 0) continue;
                             var index = (x + 1) + (y + 1) * 3 + (z + 1) * 3 * 3;
                             var direction = -new Vector3(x, y, z);
                             var dot = Vector3.Dot(rotation * Vector3.down, direction);
                             if (dot < 0)
                             {
-                                chunks[index].densityMap[localPos[index].ToLinearChunkScaleIndex()] = densitySnapshot[index] + densitySnapshot[1 + 3 + 9] * value * .5f * Mathf.Abs(dot);
-                                chunks[1 + 3 + 9].densityMap[localPos[1 + 3 + 9].ToLinearChunkScaleIndex()] -= densitySnapshot[1 + 3 + 9] * value * .5f * Mathf.Abs(dot);
+                                chunks[index].densityMap[localPos[index].ToLinearChunkScaleIndex()] += densitySnapshot[index] * value * .5f * Mathf.Abs(dot);
+                                chunks[13].densityMap[localPos[13].ToLinearChunkScaleIndex()] -= densitySnapshot[index] * value * .5f * Mathf.Abs(dot);
                             }
                             else
                             {
-                                chunks[1 + 3 + 9].densityMap[localPos[1 + 3 + 9].ToLinearChunkScaleIndex()] += densitySnapshot[index] * value * .5f * dot;
-                                chunks[index].densityMap[localPos[index].ToLinearChunkScaleIndex()] = densitySnapshot[index] - densitySnapshot[index] * value * .5f * dot;
+                                chunks[13].densityMap[localPos[13].ToLinearChunkScaleIndex()] += densitySnapshot[index] * value * .5f * dot;
+                                chunks[index].densityMap[localPos[index].ToLinearChunkScaleIndex()] -= densitySnapshot[index] * value * .5f * dot;
                             }
                         }
                     }
@@ -283,7 +309,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             else
             {
                 /*
-                 if density is over threshhold to block check neighbors beneath and spread half value
+                 if block density is over threshhold to exist, check neighbors beneath and spread half value
                  */
                 if (chunks[1 + 3 + 9].densityMap[localPos[1 + 3 + 9].ToLinearChunkScaleIndex()] >= directorInstance.densityToRealityBorder)
                 {
@@ -292,7 +318,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                         chunks[1 + 3 + 9].densityMap[localPos[1 + 3 + 9].ToLinearChunkScaleIndex()] -= value * .5f;
                         chunks[1 + 0 + 9].densityMap[localPos[1 + 0 + 9].ToLinearChunkScaleIndex()] += value * .5f;
                     }
-                    //if same level side isn't given and beneath could use more
+                    //if diagonal nearby has lower density and the path there is unobstructed, erode downhill
                     else
                     {
                         if (chunks[0 + 3 + 9].densityMap[localPos[0 + 3 + 9].ToLinearChunkScaleIndex()] < directorInstance.densityToRealityBorder && chunks[0 + 0 + 9].densityMap[localPos[0 + 0 + 9].ToLinearChunkScaleIndex()] < directorInstance.densityToRealityBorder)
@@ -350,6 +376,8 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                 directorInstance.NeighboringBlocksRefreshSetup(localPos[i], chunks[i], 1);
             }
         }
+
+
 
         void BrushStrokeColor(bool blur = false)
         {
@@ -434,6 +462,8 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             colorToPaint = col;
             pos = sop;
         }
+
+
         void BrushStrokeMatter()
         {
             if (meshToBrush == null)
@@ -468,6 +498,8 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                 }
             }
         }
+
+
         void BrushStrokeShape(bool blur = false)
         {
             var val = value;
@@ -558,6 +590,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             pos = sop;
         }
 
+
         void BrushStrokeBlock()
         {
             var sop = pos;
@@ -597,6 +630,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             blockToSet = tmp;
         }
 
+
         void BrushStrokeGrass()
         {
             var sop = pos;
@@ -633,10 +667,11 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             }
         }
 
+
         public void SubGrass(Int3 pos)
         {
             var posGlobal = pos;// - directorInstance.globalOffset*LandscapeTool.ChunkScale;
-            Int3 chunkOrgPos = W.GridFloor(posGlobal, LandscapeTool.ChunkScale);
+            Int3 chunkOrgPos = FloorToGrid.GridFloor(posGlobal, LandscapeTool.ChunkScale);
             Int3 posLocal = posGlobal - (chunkOrgPos * LandscapeTool.ChunkScale);
             Chunk chunkOrg;
             if (directorInstance.withinLimit(chunkOrgPos))
@@ -699,6 +734,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             directorInstance.NeighboringBlocksRefreshSetup(posLocal, chunkOrg, 1);
         }
 
+
         void BrushStrokeTree()
         {
             var sop = pos;
@@ -738,10 +774,11 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             blockToSet = tmp;
         }
 
+
         public void SubTree(Int3 pos)
         {
             var posGlobal = pos;
-            Int3 chunkOrgPos = W.GridFloor(posGlobal, LandscapeTool.ChunkScale);
+            Int3 chunkOrgPos = FloorToGrid.GridFloor(posGlobal, LandscapeTool.ChunkScale);
             Int3 posLocal = posGlobal - (chunkOrgPos * LandscapeTool.ChunkScale);
             Chunk chunkOrg;
             if (directorInstance.withinLimit(chunkOrgPos))
@@ -795,6 +832,8 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 
             directorInstance.NeighboringBlocksRefreshSetup(posLocal, chunkOrg, 1);
         }
+
+
         void BrushStrokeScatter()
         {
             var sop = pos;
@@ -835,10 +874,11 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             blockToSet = tmp;
         }
 
+
         public void SubScatter(Int3 pos)
         {
             var posGlobal = pos;
-            Int3 chunkOrgPos = W.GridFloor(posGlobal, LandscapeTool.ChunkScale);
+            Int3 chunkOrgPos = FloorToGrid.GridFloor(posGlobal, LandscapeTool.ChunkScale);
             Int3 posLocal = posGlobal - (chunkOrgPos * LandscapeTool.ChunkScale);
             Chunk chunkOrg;
             if (directorInstance.withinLimit(chunkOrgPos))

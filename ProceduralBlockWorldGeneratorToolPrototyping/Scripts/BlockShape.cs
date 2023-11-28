@@ -16,7 +16,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             return new BlockShape() { covers = covers, meshSections = meshSections };
         }
 
-        //learned some from here https://grantwinney.com/how-to-compare-two-objects-testing-for-equality-in-c/
+        //learned something about C# equality here https://grantwinney.com/how-to-compare-two-objects-testing-for-equality-in-c/
 
         public override bool Equals(object obj) => obj is BlockShape o && Equals(o);
 
@@ -25,7 +25,6 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             return x.Equals(y);
         }
 
-        //? Check Cube Class for updates on equals
         public static bool operator !=(BlockShape x, BlockShape y)
         {
             return !(x == y);

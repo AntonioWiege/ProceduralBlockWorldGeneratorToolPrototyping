@@ -1,6 +1,7 @@
 /*Antonio Wiege*/
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
 namespace ProceduralBlockWorldGeneratorToolPrototyping
 {
 
@@ -16,8 +17,6 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         /// <param name="relative">default true reset point_in_Biome_Value_Space and rotation during check, otherwise voxelize relative to world however currently transformed</param>
         public static List<Vector3> Run(GameObject body, Bounds checkWithinTheseBounds = default(Bounds), bool relative = false)
         {
-            List<Vector3> result = new();
-
             if (resolution < 0.01f) resolution = LandscapeTool.BlockScale;
 
             GameObject original_transform = new("don't touch. technical transform var in use for VoxelizeByCollision.");
@@ -42,6 +41,8 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 
             if (relative)
             {
+                //retransform to default and store to reset after operation
+
                 pos = t.position;
                 rot = t.rotation;
                 scale = t.localScale;
@@ -55,12 +56,14 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 
             LayerMask lm = body.layer;
             //Should be some temporary layer to selectively have the one object in collision, but for general work without setup using "Water" should suffice
-            body.layer = LayerMask.NameToLayer("Water"); //may not be exclusive due to multi threading which is why we use overlapSphere instead of SphereCheck
+            body.layer = LayerMask.NameToLayer("Water"); //may not be exclusive due to multi threading which is why overlapSphere is used, instead of SphereCheck
 
             Collider[] colliders;
+            List<Vector3> result = new();
 
-            //get the closest radius that is larger than the magnitude and a multiple of block_size 
-            /// to cover the bounds with sphere
+
+            //get number of octaves needed to reach the closest radius that is
+            //larger than the magnitude and a multiple of block_size to cover the bounds with sphere
             int octaves = closestOfSqrt((b.max - b.center).magnitude);
 
             colliders = Physics.OverlapSphere(b.center, cubeOctSize(octaves) * .5f * Mathf.Sqrt(2f), ~body.layer);
@@ -80,6 +83,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 
             if (relative)
             {
+                //reset previous transform normalization
                 t.SetPositionAndRotation(pos, rot);
                 t.localScale = scale;
             }
@@ -87,12 +91,13 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             Object.DestroyImmediate(original_rotation);
             Object.DestroyImmediate(original_transform);
 
+            /*
 #if !Deactivate_Debugging
             foreach (var item in result)
             {
                 Debug.DrawLine(body.transform.TransformPoint(item), body.transform.TransformPoint(item) + Vector3.right * resolution * .5f * Mathf.Sqrt(2f), Color.blue * .5f);
             }
-#endif
+#endif*/
 
             return result;
         }
@@ -119,6 +124,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                         {
                             p = center + new Vector3(x - 1, y - 1, z - 1) * d + Vector3.one * d * .5f;
                         }
+
                         Collider[] colliders;
                         // In SphereCast it is which layers are included. In SphereOverlap which are ignored.
                         colliders = Physics.OverlapSphere(p, d * .5f * Mathf.Sqrt(2f), ~body.layer);
@@ -127,44 +133,42 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                         {
                             foreach (var item in colliders)
                             {
-                                if (item.gameObject == body)
+                                if (item.gameObject == body)//avoid stranger objects collisions
                                 {
-#if !Deactivate_Debugging&&!Deactivate_Gizmos
+/*#if !Deactivate_Debugging&&!Deactivate_Gizmos
                                     Debug.DrawLine(p, p + Vector3.right * d * .5f * Mathf.Sqrt(2f) * debug_size_mul, Color.green * .86f + Color.red);
-#endif
+#endif*/
 
-                                    if (octave > 1)
+                                    if (octave > 1)//keep nesting until lowest octave is reached
                                     {
                                         //each collision of larger scale gets subdivided into a new octree octave, to repeat the collision checks in finer resolution, where necessary
                                         NestedOctave(result, body, p, octave, relative, rotationT, transformT);
                                     }
-#if !Deactivate_Debugging&&!Deactivate_Gizmos
                                     else
                                     {
                                         //if final resolution and target size reached, add position as voxel entry to the result container.
                                         result.Add(transformT.InverseTransformPoint(p));
-
-                                        Debug.DrawLine(p, p + Vector3.right * resolution * .5f * Mathf.Sqrt(2f), Color.blue * .5f);
-
+ /*#if !Deactivate_Debugging&&!Deactivate_Gizmos
+                                                                               Debug.DrawLine(p, p + Vector3.right * resolution * .5f * Mathf.Sqrt(2f), Color.blue * .5f);
+ #endif*/
                                     }
-#endif
                                     break;
                                 }
-#if !Deactivate_Debugging&&!Deactivate_Gizmos
+/*#if !Deactivate_Debugging&&!Deactivate_Gizmos
                                 else
                                 {
                                     Debug.DrawLine(p, p + Vector3.right * d * .5f * Mathf.Sqrt(2f) * debug_size_mul, Color.red + Color.blue * .68f);
                                 }
-#endif
+#endif*/
                             }
                         }
 
-#if !Deactivate_Debugging&&!Deactivate_Gizmos
+/*#if !Deactivate_Debugging&&!Deactivate_Gizmos
                         else
                         {
                             Debug.DrawLine(p, p + Vector3.right * d * .5f * Mathf.Sqrt(2f) * debug_size_mul, Color.green * 0.86f + Color.blue);
                         }
-#endif
+#endif*/
                     }
                 }
             }

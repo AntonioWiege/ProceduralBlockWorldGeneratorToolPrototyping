@@ -166,7 +166,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 
         [Tooltip("Toggle trees, grass & stones")]
         public bool generateDecoratives = true;
-        [Tooltip("Generate smaller stones around bigger ones"),FormerlySerializedAs("barnacling")]
+        [Tooltip("Generate smaller stones around bigger ones"), FormerlySerializedAs("barnacling")]
         public bool barnacling = false;
         [Tooltip("Affects mesh brush and effector object behaviours. Polygon limit 256")]
         public bool forceConvex;
@@ -213,12 +213,12 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         public ComputeShader CellNoiseSixDPC;
         public float gradientBottom, gradientTop;
         public Gradient mapColorGradient;
-        
+
         [TextArea(1, 32)]
         //add note the UI is overloaded for some reason
         /*public//*/
         //    string developerNote = "\tThe global script define symbols for this tool are:\r\nDeactivate_Gizmos\r\nDeactivate_Debugging\r\nDeactivate_Profiling\r\nDeactivate_MultiFrameExecution\r\nDeactivate_CustomGameLoop\r\nDeactivate_ReducedMemoryUse\r\nDeactivate_Async\r\n\tall of which are undefined by default and on import.\r\n/*\r\ngo to Project Settings -> Player -> Scripting Define Symbols\r\nIf symbols do not immediately update on apply:\r\n\tadd another, leave empty and apply again.\r\n\tif still nothing restart the editor\r\nif framerate stutters or seems very low check the profiler, if the editor takes much longer than the scripts restart unity.\r\n*/\r\n\r\nPS: Editor Inspector Assigned is usually a runtime thing for play mode, to have it work in the editor too it's been copied onto this.\r\n\r\nFresh 2022.2.11 Built in Renderpipeline, add Memory Profiler 1.0.0 & Post Processing.\r\nAdd Project Settings->Input Manager  Input Axis \"Perpendicular\" in analogy to \"Horizontal\" keys in order {q, e, left shift, left ctrl}\r\nGraphics change from Forward to Deffered;\t\t\t\r\nPlayer:\tColor Space* -> Linear \tUse incremental GC -> Tick(true)";
-        
+
         #endregion
         #region System & Debug Data
         public Pipeline pipeline;
@@ -248,7 +248,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         public ConcurrentBag<Chunk> chunksUnderConstruction = new();
 #endif
         public HashSet<Chunk> currentlyVisibleChunks = new();
-       // [HideInInspector]
+        // [HideInInspector]
         //public List<Chunk> inspectorDebugHashsetToList = new List<Chunk>();
         /*
 #if !Deactivate_CustomGameLoop
@@ -260,7 +260,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         public bool withinLimit(Int3 i) => i.x > -mapLimitsPlusMinusInChunks && i.x < mapLimitsPlusMinusInChunks
                                                     && i.y > -mapLimitsPlusMinusInChunks && i.y < mapLimitsPlusMinusInChunks
                                                     && i.z > -mapLimitsPlusMinusInChunks && i.z < mapLimitsPlusMinusInChunks;
-        public Int3 intoLimit(Int3 i) => new Int3((i.x>mapLimitsPlusMinusInChunks)?mapLimitsPlusMinusInChunks: (i.x < -mapLimitsPlusMinusInChunks)? -mapLimitsPlusMinusInChunks:i.x,
+        public Int3 intoLimit(Int3 i) => new Int3((i.x > mapLimitsPlusMinusInChunks) ? mapLimitsPlusMinusInChunks : (i.x < -mapLimitsPlusMinusInChunks) ? -mapLimitsPlusMinusInChunks : i.x,
             (i.y > mapLimitsPlusMinusInChunks) ? mapLimitsPlusMinusInChunks : (i.y < -mapLimitsPlusMinusInChunks) ? -mapLimitsPlusMinusInChunks : i.y,
             (i.z > mapLimitsPlusMinusInChunks) ? mapLimitsPlusMinusInChunks : (i.z < -mapLimitsPlusMinusInChunks) ? -mapLimitsPlusMinusInChunks : i.z);
         [HideInInspector]//inspector can take a loot of editor overhead with many elements, even when collapsed
@@ -283,18 +283,22 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             pipeline = new(this);
             noiseHandler = new(this);
             Sculpting_and_Brush_setup = new(this);
+
             CalculateSphericalOffsets();
+
             helper = new GameObject("Helper");
             helper.transform.parent = gameObject.transform;
             helper.AddComponent<MeshCollider>().enabled = false;
-            if(forceConvex)helper.GetComponent<MeshCollider>().convex = true;
+            if (forceConvex) helper.GetComponent<MeshCollider>().convex = true;
+
             camera = Camera.main;
             var mcc = camera.GetComponent<MainCamControlls>();
             if (mcc == null)
             {
                 mcc = camera.AddComponent<MainCamControlls>();
             }
-            if(!mcc.landscapeTools.Contains(this))mcc.landscapeTools.Add(this);
+
+            if (!mcc.landscapeTools.Contains(this)) mcc.landscapeTools.Add(this);
             foreach (var item in effectorObjects)
             {
                 item.directorInstance = this;
@@ -320,7 +324,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     {
                         for (float x = -startBoundsFill.extents.x; x < startBoundsFill.extents.x; x++)
                         {
-                            pipeline.ForceChunkUpToState(RequestPiece(new Int3(startBoundsFill.center.x + x, startBoundsFill.center.y + y, startBoundsFill.center.z + z), true),5);
+                            pipeline.ForceChunkUpToState(RequestPiece(new Int3(startBoundsFill.center.x + x, startBoundsFill.center.y + y, startBoundsFill.center.z + z), true), 5);
                         }
                     }
                 }
@@ -328,42 +332,43 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             startUpTime = Time.realtimeSinceStartup;
         }
 
+
         //All correlated updates are called from here
         private void Update()
         {
-      timeSincePlay = Time.realtimeSinceStartup;
-                OceanAndCloudsHeight();
-                camera.GetComponent<MainCamControlls>().CustomUpdate();
-                Mouse();
-                if (Pause_pipeline_loop) return;
-                Sculpting_and_Brush_setup.Update();
+            timeSincePlay = Time.realtimeSinceStartup;
+            OceanAndCloudsHeight();
+            camera.GetComponent<MainCamControlls>().CustomUpdate();
+            Mouse();
 
-                timer += Time.deltaTime;
-                int safetyCapCounter = 0;
-                if (PipelineStepsPerSecond > 0)
+            if (Pause_pipeline_loop) return;
+
+            Sculpting_and_Brush_setup.Update();
+
+            timer += Time.deltaTime;
+            int safetyCapCounter = 0;
+            if (PipelineStepsPerSecond > 0)
+            {
+                while (timer > 1f / PipelineStepsPerSecond)
                 {
-                    while (timer > 1f / PipelineStepsPerSecond)
+                    timer -= 1f / PipelineStepsPerSecond;
+                    safetyCapCounter++;
+                    pipeline.Update();
+                    if (safetyCapCounter >= PipelineStepsPerFrameCap)
                     {
-                        timer -= 1f / PipelineStepsPerSecond;
-                        safetyCapCounter++;
-                        //RequestNewPiecesByRelevance();
-                        pipeline.Update();
-                        if (safetyCapCounter >= PipelineStepsPerFrameCap)
-                        {
-                            break;
-                        }
+                        break;
                     }
                 }
-                else
-                {
-                    //RequestNewPiecesByRelevance();
-                    pipeline.Update();
-                }
+            }
+            else
+            {
+                pipeline.Update();
+            }
         }
 
         void OceanAndCloudsHeight()
         {
-            if (ocean != null) ocean.transform.position = Vector3.up * oceanHeight + globalOffset.AsVector3*ChunkScale*BlockScale;
+            if (ocean != null) ocean.transform.position = Vector3.up * oceanHeight + globalOffset.AsVector3 * ChunkScale * BlockScale;
             if (clouds != null) clouds.transform.position = Vector3.up * cloudHeight + globalOffset.AsVector3 * ChunkScale * BlockScale;
         }
 
@@ -376,12 +381,12 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 
             if (hitMouse)
             {
-                currentPosIn = W.GridFloorHit(raycastHit, BlockScale).ToInt3() - globalOffset*ChunkScale;//The block pos you'd expect to deconstruct
-                currentPosOut = currentPosIn + W.ClosestCubeSideNormal(raycastHit.normal).ToInt3();//The block pos you'd expect to build / fill
+                currentPosIn = FloorToGrid.GridFloorHit(raycastHit, BlockScale).ToInt3() - globalOffset * ChunkScale;//The block pos you'd expect to deconstruct
+                currentPosOut = currentPosIn + FloorToGrid.ClosestCubeSideNormal(raycastHit.normal).ToInt3();//The block pos you'd expect to build / fill
             }
 
             //chunks get refreshed around this point_in_Biome_Value_Space. Mouse world hit with fallback to camera pos
-            pointOfChunkOfRelevance = W.GridFloor((hitMouse ? currentPosIn.AsVector3 * BlockScale : camera.transform.position - globalOffset.AsVector3 * ChunkScale*BlockScale), ChunkScale * BlockScale);
+            pointOfChunkOfRelevance = FloorToGrid.GridFloor((hitMouse ? currentPosIn.AsVector3 * BlockScale : camera.transform.position - globalOffset.AsVector3 * ChunkScale * BlockScale), ChunkScale * BlockScale);
         }
 
         /// <summary>Creates the chunk if not already there to return;</summary>
@@ -390,13 +395,11 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         {
             if (gameActive && !withinLimit(chunkPos))
             {
-             //   Log.Unexpected("Requested GameActive Chunk outside of Level Bounds, clamping down");
                 chunkPos = intoLimit(chunkPos);
             }
             else if (chunkPos.AsVector3.magnitude > 100000f)
             {
-             //   Log.Unexpected("Requested Chunk at extreme coordinates beyond 100k, assume this is an error and clamp range. This can likely happen when tabbing in and out of the active window or getting the mouse at a thin angle on a large plane with a collider.");
-                chunkPos= intoLimit(chunkPos);
+               chunkPos = intoLimit(chunkPos);
             }
 
             Chunk chunk;
@@ -415,7 +418,8 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                 if (chunk.key.x < -startBoundsFill.extents.x + startBoundsFill.center.x)
                 {
                     chunk.gameActive = false;
-                }else
+                }
+                else
                 if (chunk.key.x >= startBoundsFill.extents.x + startBoundsFill.center.x)
                 {
                     chunk.gameActive = false;
@@ -443,7 +447,6 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             return chunk;
         }
 
-        //TERM! Chunk Pos should be replaced with Chunk Key to better differantiate to ChunkWorldPos
 
         /// <summary>check for neighbors and if available set own and their surroundings. Both to avoid time slicing conflicts.</summary>
         public void UpdateChunkSurroundings(Chunk chunk, Int3 chunkPos)
@@ -467,6 +470,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             }
         }
 
+
         /// <param nameID="chunkPos">key in directors chunk dictionairy</param>
         /// <returns>null if chunk not found</returns>
         public Chunk TryGetPiece(Int3 chunkPos)
@@ -480,8 +484,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 
         public getBlockResult GetBlock(Int3 posGlobal)
         {
-            //posGlobal -= globalOffset * ChunkScale;
-            Int3 chunkOrgPos = W.GridFloor(posGlobal, ChunkScale);
+            Int3 chunkOrgPos = FloorToGrid.GridFloor(posGlobal, ChunkScale);
             Int3 posLocal = posGlobal - (chunkOrgPos * ChunkScale);
             Chunk chunkOrg;
             if (withinLimit(chunkOrgPos))
@@ -492,7 +495,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             {
                 chunkOrg = RequestPiece(chunkOrgPos, false);
             }
-            return new getBlockResult() { chunk = chunkOrg, block = chunkOrg.blocks[posLocal.ToLinearChunkScaleIndex()],localPos=posLocal};
+            return new getBlockResult() { chunk = chunkOrg, block = chunkOrg.blocks[posLocal.ToLinearChunkScaleIndex()], localPos = posLocal };
         }
 
         /// <summary>
@@ -501,8 +504,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         /// </summary>
         public void SetBlock(Int3 posGlobal, Block cube, bool setDensity = false)//take in cube pos without globalOffset, have it applied with.
         {
-            //posGlobal -= globalOffset * ChunkScale;
-            Int3 chunkOrgPos = W.GridFloor(posGlobal, ChunkScale);
+            Int3 chunkOrgPos = FloorToGrid.GridFloor(posGlobal, ChunkScale);
             Int3 posLocal = posGlobal - (chunkOrgPos * ChunkScale);
             Chunk chunkOrg;
             if (withinLimit(chunkOrgPos))
@@ -516,9 +518,9 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 
             pipeline.ForceChunkUpToState(chunkOrg, 2);
             chunkOrg.blocks[posLocal.ToLinearChunkScaleIndex()] = cube;
-            if(setDensity)
+            if (setDensity)
             {
-                chunkOrg.densityMap[posLocal.ToLinearChunkScaleIndex()] = (cube.blockShape==BlockShape_Library.empty)?0:1;
+                chunkOrg.densityMap[posLocal.ToLinearChunkScaleIndex()] = (cube.blockShape == BlockShape_Library.empty) ? 0 : 1;
             }
             chunkOrg.blocksToUpdate.Add(posLocal);
 #if !Deactivate_Async
@@ -528,7 +530,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             chunkOrg.genState = 2;
 
 
-            NeighboringBlocksRefreshSetup(posLocal,chunkOrg,2);
+            NeighboringBlocksRefreshSetup(posLocal, chunkOrg, 2);
         }
 
         public void NeighboringBlocksRefreshSetup(Int3 posLocal, Chunk chunkOrg, int genState = 1)//shouldn't be public
@@ -542,8 +544,8 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 #if !Deactivate_Async
                     if (!chunksUnderConstruction.Contains(chunkOrg))
 #endif
-                        chunksUnderConstruction.Add(chunkOrg.surroundChunks[1, 2, 1]);
-                    pipeline.ForceChunkUpToState(chunkOrg.surroundChunks[1, 2, 1],genState);
+                    chunksUnderConstruction.Add(chunkOrg.surroundChunks[1, 2, 1]);
+                    pipeline.ForceChunkUpToState(chunkOrg.surroundChunks[1, 2, 1], genState);
                     chunkOrg.surroundChunks[1, 2, 1].genState = genState;
                 }
             }
@@ -562,7 +564,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 #if !Deactivate_Async
                     if (!chunksUnderConstruction.Contains(chunkOrg))
 #endif
-                        chunksUnderConstruction.Add(chunkOrg.surroundChunks[1, 1, 2]);
+                    chunksUnderConstruction.Add(chunkOrg.surroundChunks[1, 1, 2]);
                     pipeline.ForceChunkUpToState(chunkOrg.surroundChunks[1, 1, 2], genState);
                     chunkOrg.surroundChunks[1, 1, 2].genState = genState;
                 }
@@ -581,7 +583,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 #if !Deactivate_Async
                     if (!chunksUnderConstruction.Contains(chunkOrg))
 #endif
-                        chunksUnderConstruction.Add(chunkOrg.surroundChunks[2, 1, 1]);
+                    chunksUnderConstruction.Add(chunkOrg.surroundChunks[2, 1, 1]);
                     pipeline.ForceChunkUpToState(chunkOrg.surroundChunks[2, 1, 1], genState);
                     chunkOrg.surroundChunks[2, 1, 1].genState = genState;
                 }
@@ -600,7 +602,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 #if !Deactivate_Async
                     if (!chunksUnderConstruction.Contains(chunkOrg))
 #endif
-                        chunksUnderConstruction.Add(chunkOrg.surroundChunks[1, 1, 0]);
+                    chunksUnderConstruction.Add(chunkOrg.surroundChunks[1, 1, 0]);
                     pipeline.ForceChunkUpToState(chunkOrg.surroundChunks[1, 1, 0], genState);
                     chunkOrg.surroundChunks[1, 1, 0].genState = genState;
                 }
@@ -619,7 +621,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 #if !Deactivate_Async
                     if (!chunksUnderConstruction.Contains(chunkOrg))
 #endif
-                        chunksUnderConstruction.Add(chunkOrg.surroundChunks[0, 1, 1]);
+                    chunksUnderConstruction.Add(chunkOrg.surroundChunks[0, 1, 1]);
                     pipeline.ForceChunkUpToState(chunkOrg.surroundChunks[0, 1, 1], genState);
                     chunkOrg.surroundChunks[0, 1, 1].genState = genState;
                 }
@@ -650,7 +652,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         public void SetOrAddValue(Int3 posGlobal, float value, bool SetOrAdd_TrueOrFalse = false, bool localPos = false)//take in cube pos without globalOffset, have it applied with.
         {
             //if (!localPos) posGlobal -= globalOffset *ChunkScale;
-            Int3 chunkOrgPos = W.GridFloor(posGlobal, ChunkScale);
+            Int3 chunkOrgPos = FloorToGrid.GridFloor(posGlobal, ChunkScale);
             Int3 posLocal = posGlobal - (chunkOrgPos * ChunkScale);
             if (!posLocal.Positive() || posLocal.x > 23 || posLocal.y > 23 || posLocal.z > 23)
             {
@@ -665,7 +667,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             {
                 chunkOrg = RequestPiece(chunkOrgPos, false);
             }
-            
+
             pipeline.ForceChunkUpToState(chunkOrg, 1);
 
             if (SetOrAdd_TrueOrFalse)
@@ -680,14 +682,14 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 #if !Deactivate_Async
             if (!chunksUnderConstruction.Contains(chunkOrg))
 #endif
-                chunksUnderConstruction.Add(chunkOrg);
-            NeighboringBlocksRefreshSetup(posLocal,chunkOrg,1);
+            chunksUnderConstruction.Add(chunkOrg);
+            NeighboringBlocksRefreshSetup(posLocal, chunkOrg, 1);
         }
 
         public void SetMatter(Int3 posGlobal, Matter matter, bool localPos = false)
         {
             //if (!localPos) posGlobal -= globalOffset*ChunkScale;
-            Int3 chunkOrgPos = W.GridFloor(posGlobal, ChunkScale);
+            Int3 chunkOrgPos = FloorToGrid.GridFloor(posGlobal, ChunkScale);
             Int3 posLocal = posGlobal - (chunkOrgPos * ChunkScale);
             Chunk chunkOrg;
             if (withinLimit(chunkOrgPos))
@@ -698,14 +700,14 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             {
                 chunkOrg = RequestPiece(chunkOrgPos, false);
             }
-           
+
             pipeline.ForceChunkUpToState(chunkOrg, 2);
             chunkOrg.blocks[posLocal.ToLinearChunkScaleIndex()].matter = matter;//matter changes mesh uv 
             chunkOrg.blocksToUpdate.Add(posLocal);// 
 #if !Deactivate_Async
             if (!chunksUnderConstruction.Contains(chunkOrg))
 #endif
-                chunksUnderConstruction.Add(chunkOrg);
+            chunksUnderConstruction.Add(chunkOrg);
             chunkOrg.genState = 2;
 
         }
@@ -714,7 +716,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         public void SetColor(Int3 posGlobal, float value, bool localPos = false)
         {
             //if (!localPos) posGlobal -= globalOffset * ChunkScale;
-            Int3 chunkOrgPos = W.GridFloor(posGlobal, ChunkScale);
+            Int3 chunkOrgPos = FloorToGrid.GridFloor(posGlobal, ChunkScale);
             Int3 posLocal = posGlobal - (chunkOrgPos * ChunkScale);
             Chunk chunkOrg;
             var colorToPaint = Sculpting_and_Brush_setup.colorToPaint;
@@ -740,7 +742,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 #if !Deactivate_Async
             if (!chunksUnderConstruction.Contains(chunkOrg))
 #endif
-                chunksUnderConstruction.Add(chunkOrg);
+            chunksUnderConstruction.Add(chunkOrg);
             chunkOrg.genState = 3;
 
         }
@@ -802,10 +804,10 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             list.Remove(Int3.bottom);
             list.Insert(0, Int3.bottom);
             list.Insert(0, Int3.zero);
-           sphericalOffsetLookUpTable = list.ToArray();
+            sphericalOffsetLookUpTable = list.ToArray();
         }
-}
-#endregion
+    }
+    #endregion
 
 
     public struct getBlockResult

@@ -7,6 +7,8 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 {
     public class Chunk : MonoBehaviour
     {
+        #region variables
+        /// <summary> translate linear index to 3DlocalPos </summary>
         private static Int3[] _localIDtoPos;
         public static Int3[] LocalIDtoPos
         {
@@ -32,42 +34,59 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         }
 
         public LandscapeTool directorInstance;
+
         public bool gameActive;
+
         public Chunk[,,] surroundChunks = new Chunk[3, 3, 3];
+        /// <summary>position in chunk space and unique identifier in assigned directorInstance</summary>
         public Int3 key;
+
         /// <summary> step in pipeline (any one step), 
         /// may only be set without prior ForceChunkUpToState by 
         /// the step defining functions in the pipeline themselfes </summary>
         public int genState;
+
         public bool updateAllBlocks;
+
         public HashSet<Int3> blocksToUpdate = new();
+
         public Mesh m;
         public MeshFilter mf;
         public MeshRenderer mr;
         public MeshCollider mc;
+
         [HideInInspector]
         public float[] densityMap = new float[LandscapeTool.ChunkScale * LandscapeTool.ChunkScale * LandscapeTool.ChunkScale];
+
         [HideInInspector]
         public Block[] blocks = new Block[LandscapeTool.ChunkScale * LandscapeTool.ChunkScale * LandscapeTool.ChunkScale];
+
         [HideInInspector]
         public int[] primaryBiomeID = new int[LandscapeTool.ChunkScale * LandscapeTool.ChunkScale * LandscapeTool.ChunkScale];
+
         [HideInInspector]
         public Color[] tint = new Color[LandscapeTool.ChunkScale * LandscapeTool.ChunkScale * LandscapeTool.ChunkScale];
 
         public bool updateDecorations = true;
+
         //could put beneath into a new class for safety, but as long as minded perfectly in parallel remain separate for the benefits of original type.
-        [Tooltip("Local Chunk Space"), HideInInspector]
+        [Tooltip("In Local Chunk Space"), HideInInspector]
         public List<Int3> decoPositions = new();
+
         [HideInInspector]
         public List<Block> decoBlocks = new();
-        [Tooltip("Local Chunk Space"), HideInInspector]
+
+        [Tooltip("In Local Chunk Space"), HideInInspector]
         public List<Int3> scatteredPositions = new();
+
         [HideInInspector]
         public List<GameObject> scatteredObjects = new();
+
         public List<TreeInstance> trees = new();//just like grass becomes part of the main mesh
+
         // need new entries for TreeInstance regeneration
         public bool alreadyDecorated = false;
-
+        #endregion
 
         public override string ToString()
         {
@@ -95,9 +114,10 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             return HashCode.Combine(directorInstance, key);
         }
 
+        //reaffirmed equlas operations and hashcode by checking the bellow
         //https://grantwinney.com/how-to-compare-two-objects-testing-for-equality-in-c/
-        //https://docs.microsoft.com/de-de/dotnet/api/system.hashcode?view=net-6.0
         //https://stackoverflow.com/questions/25461585/operator-overloading-equals
+        //https://docs.microsoft.com/de-de/dotnet/api/system.hashcode?view=net-6.0
         public override bool Equals(object obj) => obj is Chunk o && Equals(o);
 
         public static bool operator ==(Chunk x, Chunk y)
@@ -119,7 +139,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             if (ReferenceEquals(this, other)) return true;
             return (other.directorInstance, other.key).Equals((directorInstance, key));
         }
-        //m c https://stackoverflow.com/questions/25461585/operator-overloading-equals
+
         public static bool Equals(Chunk one, Chunk other)
         {
             if (one is null) return other is null;

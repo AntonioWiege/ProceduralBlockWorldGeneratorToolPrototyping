@@ -4,36 +4,22 @@ Shader "ProceduralBlockLandscape/OtherNoInstanceTest"
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
-		  _AtlasRes("AtlasSteps",Range(1,16)) = 4
+		_AtlasRes("AtlasSteps",Range(1,16)) = 4
         _HeightMap ("HeightMap", 2D) = "white" {}
-        _Tiling ("Tiling", Float) = 1.0
-        _Fix ("BorderFix", Range(-0.1,0.1)) = 0
-        _FixBias ("BorderFixBias", Range(-0.1,0.1)) = 0
+        _Tiling ("Tiling Worldspace", Float) = 1.0
         _OcclusionMap("Occlusion", 2D) = "white" {}
         _NormalMap("Normal Map", 2D) = "bump" {}
         _Metallic ("Metallic", Range(0,1)) = .8
-        _Mul ("Mul", Range(0,3)) = 1.0
-        _ComputeMul ("ComputeMul", Range(0,1)) = 1.0
+        _Mul ("Multiply Color", Range(0,3)) = 1.0
         _AO ("AO", Range(0,1)) = .99
-        _ReNormal ("ReNormal", Range(0,1)) = 0
         
-		_Height("Height", float) = .1
-		_NormInts("Normal Intensity",float) = 1
-		 _Smoothness("Specular", float) = .5
-		 _Discard("Discard", float) = 0
+		_Height("Depth Multiply", float) = .1
+		_HeightOffset("Depth Offset", float) = .1
 		 _sD("Step Distance",float) = 0.1
 		 _Steps("Steps",int) = 30
 		 _HeightDeltaInfluence("Height Delta Influence",float) = 1
-		 _HDI2("Shadows Height Delta Influence",float) = 1
-		  _SsD("Shadows Step Distance",float) = 0.03
-		  _Steps2("Steps (Soft Shadows)",int) = 30
-		  _FirstOffset("_FirstOffset",float) = 0.1
-		  _Shadows("Shadows",float) = .5
-		  _ReRange("Fine Tune Shadows",float) = 1
-		  _Shine("Shine Bright",float) = 0
+		  _Shadows("Shadow Strength",Range(0,1)) = .5
 		  _fLOAT("_fLOAT",float) = 99999.99999
-		  _Empty("CullAlpha",Range(0,1)) = 0.5
-		   _Scroll("Scroll",float) = 0
     }
 
 
@@ -69,22 +55,24 @@ Shader "ProceduralBlockLandscape/OtherNoInstanceTest"
                 float3 tangentLightDir : TEXCOORD9;
             };
  
+
             float Mod(float x, float y)
             {
                 return x - y * floor(x/y);
             }
             
+
             int _AtlasRes;
-		float _Empty,_Height,_Smoothness,_Discard,_sD,_Steps,_NormInts,_HeightDeltaInfluence,_Steps2,_FirstOffset,_Shadows,_ReRange,_Shine,_fLOAT,_Scroll,_HDI2,_SsD;
-            float _Tiling,_FixBias,_Fix;
-            float _ComputeMul;
-            float _ReNormal;
+		float _Height,_HeightOffset,_sD,_Steps,_HeightDeltaInfluence,_Shadows,_fLOAT,_Tiling, _Metallic,_Mul, _AO;
+
+
+
 
             v2f vert (uint id : SV_VertexID,uint instance : SV_INSTANCEID,float4 position : POSITION, float3 normal : NORMAL, float4 tangent : TANGENT, float2 uv : TEXCOORD0, float4 color : COLOR)
             {
                 v2f o;
                 o.color = color;
-                //*
+
                o.normal = normal;
                 
                 o.position = UnityObjectToClipPos(position);
@@ -100,8 +88,7 @@ Shader "ProceduralBlockLandscape/OtherNoInstanceTest"
                 o.tspace1 = half3(wTangent.y, wBitangent.y, wNormal.y);
                 o.tspace2 = half3(wTangent.z, wBitangent.z, wNormal.z);
 
-
-
+                //camera view calculation
 			float3 worldViewDir = o.wPos - _WorldSpaceCameraPos;
 
 			o.tangentViewDir = float3(
@@ -109,7 +96,7 @@ Shader "ProceduralBlockLandscape/OtherNoInstanceTest"
 				dot(worldViewDir, wNormal),
 				dot(worldViewDir, wBitangent)
 				);
-
+                 //sun view calculation
 			worldViewDir = o.wPos - _WorldSpaceLightPos0.xyz*_fLOAT;
 
             o.tangentLightDir = float3(
@@ -118,23 +105,24 @@ Shader "ProceduralBlockLandscape/OtherNoInstanceTest"
 				dot(worldViewDir, wBitangent)
 				);
 
-
-                //o.coords = o.wPos.xyz * _Tiling;
-
                 o.uv = uv;
+                //regular lighting
                 half nl = max(0, dot(wNormal, _WorldSpaceLightPos0.xyz));
                 o.diff = nl * _LightColor0.rgb;
                 o.ambient = ShadeSH9(half4(wNormal,1));
                 return o;
             }
 
+
+
             sampler2D _MainTex;
             sampler2D _HeightMap;
             sampler2D _NormalMap;
             sampler2D _OcclusionMap;
-            float _Metallic;
-            float _Mul;
-            float _AO;
+
+
+
+
 
             fixed4 frag (v2f i,uint instance : SV_INSTANCEID) : SV_Target
             {
@@ -142,18 +130,19 @@ Shader "ProceduralBlockLandscape/OtherNoInstanceTest"
                 half3 blend = abs(i.normal);
                 // make sure the weights sum up to 1 (divide by sum of x+y+z)
                 blend /= dot(blend,1.0);
-
+                //scale textureCoordinates in worldSpace
                 float3 coords = i.wPos*_Tiling;
 
                 float2 coordsxy,coordsyz,coordsxz;
 
-
+                //dynamically add or remove resolution by distance to camera
                 _Steps =_Steps/clamp(distance(_WorldSpaceCameraPos, i.wPos)*0.1,1,1000);
 
                 float uvd = 1.0/_AtlasRes;
-            uvd*=(1-_Fix);
 
-    //COORDSXY
+                //more details on raymarching in POMAW.shader
+
+            //COORDS-XY
              float3 rayPos = float3(coords.x, 0, coords.y);
 
 			float3 rayDir = normalize(i.tangentViewDir);//from screen center x,z coordinates
@@ -192,7 +181,7 @@ Shader "ProceduralBlockLandscape/OtherNoInstanceTest"
 			}
 			}
 						oldHeight = height;
-			 height = (1 - tex2Dlod(_HeightMap, float4(i.uv+(rayPos.xz+float2(uvd,uvd)*1000)%uvd , 0, 0)).r) * -1 * _Height ;
+			 height = (1 - tex2Dlod(_HeightMap, float4(i.uv+(rayPos.xz+float2(uvd,uvd)*1000)%uvd , 0, 0)).r-_HeightOffset) * -1 * _Height ;
 
 			 			 e = abs(rayPos.y-height);
 			}
@@ -202,8 +191,8 @@ Shader "ProceduralBlockLandscape/OtherNoInstanceTest"
 
             coordsxy=rayPos.xz;
 
-            //COORDSYZ
-              rayPos = float3(coords.y, 0, coords.z);
+            //COORDS-YZ
+             rayPos = float3(coords.y, 0, coords.z);
 
 			 rayDir = normalize(i.tangentViewDir);
 
@@ -241,7 +230,7 @@ Shader "ProceduralBlockLandscape/OtherNoInstanceTest"
 			}
 			}
 						oldHeight = height;
-			 height = (1 - tex2Dlod(_HeightMap, float4(i.uv+(rayPos.xz+float2(uvd,uvd)*1000)%uvd , 0, 0)).r) * -1 * _Height ;
+			 height = (1 - tex2Dlod(_HeightMap, float4(i.uv+(rayPos.xz+float2(uvd,uvd)*1000)%uvd , 0, 0)).r-_HeightOffset) * -1 * _Height ;
 
 			 			 e = abs(rayPos.y-height);
 			}
@@ -251,8 +240,8 @@ Shader "ProceduralBlockLandscape/OtherNoInstanceTest"
 
             coordsyz=rayPos.xz;
 
-            //COORDSXZ
-              rayPos = float3(coords.x, 0, coords.z); ////// CHANGE
+            //COORDS-XZ
+             rayPos = float3(coords.x, 0, coords.z); 
 
 			 rayDir = normalize(i.tangentViewDir);
 
@@ -269,7 +258,7 @@ Shader "ProceduralBlockLandscape/OtherNoInstanceTest"
 			for (li = 0; li < _Steps; li++) 
 			{
 			if(height < -_Height || height > 0){
-			rayPos = float3(coords.x,0, coords.z);////// CHANGE
+			rayPos = float3(coords.x,0, coords.z);
 			}
 			oldPos = rayPos;
 			if(b){
@@ -290,7 +279,7 @@ Shader "ProceduralBlockLandscape/OtherNoInstanceTest"
 			}
 			}
 						oldHeight = height;
-			 height = (1 - tex2Dlod(_HeightMap, float4(i.uv+(rayPos.xz+float2(uvd,uvd)*1000)%uvd , 0, 0)).r) * -1 * _Height ;
+			 height = (1 - tex2Dlod(_HeightMap, float4(i.uv+(rayPos.xz+float2(uvd,uvd)*1000)%uvd , 0, 0)).r-_HeightOffset) * -1 * _Height ;
 
 			 			 e = abs(rayPos.y-height);
 			}
@@ -300,11 +289,13 @@ Shader "ProceduralBlockLandscape/OtherNoInstanceTest"
 
             coordsxz=rayPos.xz;
 
-            coordsxy= _FixBias+abs(i.uv+abs(coordsxy+_Fix+uvd*10)%uvd)*(1-_FixBias*2);
-            coordsyz= _FixBias+abs(i.uv+abs(coordsyz+_Fix+uvd*10)%uvd)*(1-_FixBias*2);
-            coordsxz= _FixBias+abs(i.uv+abs(coordsxz+_Fix+uvd*10)%uvd)*(1-_FixBias*2);
 
 
+            coordsxy= abs(i.uv+abs(coordsxy+uvd*10)%uvd);
+            coordsyz= abs(i.uv+abs(coordsyz+uvd*10)%uvd);
+            coordsxz= abs(i.uv+abs(coordsxz+uvd*10)%uvd);
+
+                //blend heights together
                 float hx = tex2D(_HeightMap, coordsyz).r*blend.x;
                 float hy = tex2D(_HeightMap, coordsxz).r*blend.y;
                 float hz = tex2D(_HeightMap, coordsxy).r*blend.z;
@@ -313,11 +304,14 @@ Shader "ProceduralBlockLandscape/OtherNoInstanceTest"
                 fixed4 cx = tex2D(_MainTex, coordsyz);
                 fixed4 cy = tex2D(_MainTex, coordsxz);
                 fixed4 cz = tex2D(_MainTex, coordsxy);
+
                 // blend the textures based on weights
                 fixed4 color = cx * blend.x + cy * blend.y + cz * blend.z;
+                /*height based overwriting
                 color = (hx>hy)?
                 ((hx>hz)?cx:cz):
                  ((hy>hz)?cy:cz);
+                */
 
                 
                 // read the three texture projections, for x,y,z axes
@@ -326,9 +320,11 @@ Shader "ProceduralBlockLandscape/OtherNoInstanceTest"
                 half3 nz = UnpackNormal(tex2D(_NormalMap, coordsxy));
                 // blend the textures based on weights
                 half3 trinormal = nx * blend.x + ny * blend.y + nz * blend.z;
+                /*height based overwriting
                 trinormal = (hx>hy)?
                 ((hx>hz)?nx:nz):
                  ((hy>hz)?ny:nz);
+                */
                 i.normal = trinormal;
 
                 half3 wNormal;
@@ -346,26 +342,28 @@ Shader "ProceduralBlockLandscape/OtherNoInstanceTest"
                 fixed4 oz = tex2D(_OcclusionMap, coordsxy);
                 // blend the textures based on weights
                 fixed4 o = ox * blend.x + oy * blend.y + oz * blend.z;
+               /*height based overwriting
                o= (hx>hy)?
                 ((hx>hz)?ox:oz):
                  ((hy>hz)?oy:oz);
+               */
 
                 half nl = max(0, dot(wNormal, _WorldSpaceLightPos0.xyz));
                 fixed3  diff = nl * _LightColor0.rgb;
                 fixed3 ambient = ShadeSH9(half4(wNormal,1));
 
-                ///fixed shadow = clamp(dot(wNormal,_WorldSpaceLightPos0),0,1);
+                fixed shadow = clamp(dot(wNormal,_WorldSpaceLightPos0),0,1);
                 // darken light's illumination with shadow, keep ambient intact
-                fixed3 lighting = i.diff + i.ambient;
 
                 fixed4 c = 0;
-                c.rgb = skyColor*_Metallic+lighting*(1.0-_Metallic);
-                //c.rgb = skyColor*lighting;
+                c.rgb = i.diff*(1-_Shadows)+ i.diff*shadow*_Shadows
+                            +skyColor*_Metallic+i.ambient*(1.0-_Metallic);
+
                 c*=1+_Mul;
                 c.rgb *= color;
                 c.rgb *= o*_AO+(1.0-_AO);
                 c.rgb *= i.color;
-                //return fixed4(i.tangentViewDir.xyz,1);
+
                 return c;
             }
             ENDCG

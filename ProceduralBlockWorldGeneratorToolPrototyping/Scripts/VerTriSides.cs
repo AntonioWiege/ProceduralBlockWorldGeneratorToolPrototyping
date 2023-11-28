@@ -13,19 +13,20 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         public Vector3[] verts;
         public int[] tris;
         public BlockSides sides;
+
         public VerTriSides()
         {
             verts = new Vector3[0];
             tris = new int[0];
             sides = BlockSides.none;
         }
+
         public VerTriSides(Vector3[] verts, int[] tris, BlockSides sides)
         {
             this.verts = verts;
             this.tris = tris;
             this.sides = sides;
         }
-
         public VerTriSides(List<Vector3> verts, List<int> tris, BlockSides sides)
         {
             this.verts = verts.ToArray();
@@ -65,12 +66,16 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             return vts;
         }
 
+        /// <summary>
+        /// Combine all VerTriSides of all Blocks in a Chunk to one Mesh
+        /// </summary>
         public static void ChunkToMesh(Chunk c, bool recalculateTangents = false, bool optimize = false)//IEnumerable
         {
             c.m.Clear();//This one quite matters. Not sure about the background but without this, destruction will make content arrays & lengths missmatch, causing probable triangle & other issues (not tested with&out optimization)
 
             int vertCount = 0, triCount = 0;
 
+            //determine total vert & triangle count
             foreach (Block block in c.blocks)
             {
                 vertCount += block.meshSection.verts.Length;
@@ -97,6 +102,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             int vertIndex = 0;
             int trisIndex = 0;
 
+            //load all mesh data, mind the offset correction for triangles
             for (int z = 0; z < LandscapeTool.ChunkScale; z++)
             {
                 for (int y = 0; y < LandscapeTool.ChunkScale; y++)
@@ -154,7 +160,8 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     }
                 }
             }
-        
+            
+            //apply data to mesh instance
             c.m.SetVertices(vertices);
             c.m.SetTriangles(tris, 0);
             c.m.SetUVs(0, uvs);
@@ -171,9 +178,12 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         /// </summary>
         public static VerTriSides CombineShape(BlockShape blockShape, BlockSides neighboursCovering, Vector3 offset)
         {
+            //if no mesh data or completely covered return empty mesh
             if (blockShape.meshSections[0].verts.Length == 0) return BlockShape_Library.empty.meshSections[0];
             if (neighboursCovering.Count() > 5) return BlockShape_Library.empty.meshSections[0];
+
             int vertCount = 0, triCount = 0;
+            //count total lengths
             foreach (var vts in blockShape.meshSections)
             {
                 if ((vts.sides & ~neighboursCovering) == 0) continue;
@@ -181,6 +191,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                 triCount += vts.tris.Length;
             }
 
+            //combine mesh data with corrected triangle offset
             VerTriSides VTS = new() { verts = new Vector3[vertCount], tris = new int[triCount], sides = BlockSides.none };
             int vertIndex = 0;
             int trisIndex = 0;
