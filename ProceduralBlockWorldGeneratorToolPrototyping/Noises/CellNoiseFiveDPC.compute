@@ -1,11 +1,12 @@
 /*Antonio Wiege*/
+//Cellular Compute Noise Variant with 5 Dots per Cell
 #pragma kernel ND3
 #pragma kernel ND2
-//booleans cannot be set, using floats 0 = false everything else true
+//booleans cannot be set => using floats 0 = false everything else true
 float planarize=0;
 float choppy=0;
-float turbulent=0;//invert to get ridge
-float invert=0;//together with turbulent to get ridge
+float turbulent=0;
+float invert=0;//invert & turbulent to get ridge noise
 float distortSpace=0;
 //regular values ; pre-assigning values does not work in here, the written values are merely standard suggestions
 RWStructuredBuffer<float> Output;//linear layout
@@ -64,16 +65,18 @@ void ND2 (uint3 id : SV_DispatchThreadID)
     float scale = 1;
     int cid = id.x + id.y * dispatchThreadGroupCountX;
     float4 pos = (float4(id.x, id.y, 0, 0)+position+((distortSpace==0)?0:float4(DistortionData[cid].x,DistortionData[cid].y,DistortionData[cid].z,0)))*size;
+
         for (int o = octaveStartSize; o < octaveStartSize+octaveCount; o++)
         {
             scale = pow(abs(octaveStepPow), o);
-        value +=   abs(CellNoise(pos, scale) *pow(scale,octaveInfluenceBias)- ((choppy!=0)?0.5:0))*((choppy!=0)?2:1);
+            value += abs(CellNoise(pos, scale) *pow(scale,octaveInfluenceBias)- ((choppy!=0)?0.5:0))*((choppy!=0)?2:1);
             div +=pow(scale,octaveInfluenceBias);
         }
-   value /= (div<1)?1:div;
-   value= (turbulent!=0)?abs ((value-0.5)*2):value;
-  value= (invert!=0)?1-value:value;
-     value = clamp(value*multiplyWith+addPostMultiply-
+
+    value /= (div<1)?1:div;
+    value= (turbulent!=0)?abs ((value-0.5)*2):value;
+    value= (invert!=0)?1-value:value;
+    value = clamp(value*multiplyWith+addPostMultiply-
         ((planarize!=0)?planarizeIntensity*(pos.y-planarizeAtY):0),
         clampEndResultMin,clampEndResultMax);
 
@@ -88,10 +91,10 @@ void ND2 (uint3 id : SV_DispatchThreadID)
       Output[cid] *= value*weight;
       break;
       case 4:
-      Output[cid] /= (value*weight==0)?1:value*weight;//do not divide by zero my friend
+      Output[cid] /= (value*weight==0)?1:value*weight;
       break;
       case 5:
-      Output[cid] = value*(.5+weight*.5)+Output[cid]*(.5-weight*.5);//deprecated:weight==0?Output[cid]:
+      Output[cid] = value*(.5+weight*.5)+Output[cid]*(.5-weight*.5);
       break;
       case 6:
       Output[cid] %= value;
@@ -113,15 +116,17 @@ void ND3 (uint3 id : SV_DispatchThreadID)
     float scale = 1;
     int cid = id.x + id.y * dispatchThreadGroupCountX + id.z * dispatchThreadGroupCountX*dispatchThreadGroupCountX;
     float4 pos = (float4(id.x, id.y, id.z, 0)+position+((distortSpace==0)?0:float4(DistortionData[cid].x,DistortionData[cid].y,DistortionData[cid].z,0)))*size;
-        for (int o = octaveStartSize; o < octaveStartSize+octaveCount; o++)
+      
+      for (int o = octaveStartSize; o < octaveStartSize+octaveCount; o++)
         {
             scale = pow(abs(octaveStepPow), o);
-        value +=   abs(CellNoise(pos, scale) *pow(scale,octaveInfluenceBias)- ((choppy!=0)?0.5:0))*((choppy!=0)?2:1);
+            value += abs(CellNoise(pos, scale) *pow(scale,octaveInfluenceBias)- ((choppy!=0)?0.5:0))*((choppy!=0)?2:1);
             div += pow(scale,octaveInfluenceBias);
         }
-   value /= (div<1)?1:div;
-   value= (turbulent!=0)?abs ((value-0.5)*2):value;
-  value= (invert!=0)?1-value:value;
+
+    value /= (div<1)?1:div;
+    value= (turbulent!=0)?abs ((value-0.5)*2):value;
+    value= (invert!=0)?1-value:value;
     value = clamp(value*multiplyWith+addPostMultiply-
         ((planarize!=0)?planarizeIntensity*(pos.y-planarizeAtY):0),
         clampEndResultMin,clampEndResultMax);
@@ -137,10 +142,10 @@ void ND3 (uint3 id : SV_DispatchThreadID)
       Output[cid] *= value*weight;
       break;
       case 4:
-      Output[cid] /= (value*weight==0)?1:value*weight;//do not divide by zero my friend
+      Output[cid] /= (value*weight==0)?1:value*weight;
       break;
       case 5:
-      Output[cid] = value*(.5+weight*.5)+Output[cid]*(.5-weight*.5);//deprecated:weight==0?Output[cid]:
+      Output[cid] = value*(.5+weight*.5)+Output[cid]*(.5-weight*.5);
       break;
       case 6:
       Output[cid] %= value;
@@ -175,15 +180,16 @@ void ND3 (uint3 id : SV_DispatchThreadID)
  float CellNoise(float4 pos, float size){
     pos = Rotate(pos);
 
-       float4 o = GridFloor(pos,size); //original in size space
-    float4 p = o * size; //stepped in real space
+    float4 o = GridFloor(pos,size); //original in size space
+    float4 p = o * size; //stepped in world space
     float4 r = (pos - p) / size; //0-1 pos within step
     //posXYZ&Value now using 4 points per cell
     float4 points[3*3*3*3*5];
     //*
+    //Compute N-Dimensional Points for each Cell
     for (int w = -1; w < 2; w++)
         {
-    for (int z = -1; z < 2; z++)
+       for (int z = -1; z < 2; z++)
         {
             for (int y = -1; y < 2; y++)
             {
@@ -238,6 +244,8 @@ void ND3 (uint3 id : SV_DispatchThreadID)
                     }
                     }
                     }
+                    
+                    //Compute closest points to input position
 
                     float min0=10000;
                     float min1=10000;
@@ -247,7 +255,7 @@ void ND3 (uint3 id : SV_DispatchThreadID)
                     float4 minP=float4(-100000,-100000,-100000,-100000);
 
                     float4 comparerPos = float4(
-       ((noiseDimensionCount>0)?            pos.x :0) ,
+         ((noiseDimensionCount>0)?            pos.x :0) ,
          ((noiseDimensionCount>1)?             pos.y:0),
          ((noiseDimensionCount>2)?            pos.z:0),
          ((noiseDimensionCount>3)?               pos.w:0));
@@ -264,7 +272,7 @@ void ND3 (uint3 id : SV_DispatchThreadID)
             }
         }
 
-        //better return all the mins in vector form plus the final point and then switch on demand last.
+        //Compute final result based on user setup
           switch(cellularMethodID){
             case 0:
              return  Hash2Float(Hash0(minP.x)*Hash1(-minP.y)+Hash2(minP.z)+Hash3(minP.w));
@@ -281,7 +289,8 @@ void ND3 (uint3 id : SV_DispatchThreadID)
             }
        }
 
-
+       
+       //round position down to stepSize, minding values such as -0.1 go to -1 and not to 0
     float GridFloor(float value, float gridSize)
     {
             float r = (int)(value / gridSize);

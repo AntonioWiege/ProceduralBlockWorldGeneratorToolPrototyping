@@ -90,6 +90,8 @@ Shader "ProceduralBlockLandscape/AntonioWiegeParallaxOcclusionMapping"
 		IN.uv_HeightTex+=_Time.x*_Scroll;
 		IN.uv_NormalMap+=_Time.x*_Scroll;
 
+			//initialize ray by texture position, view and geometry angle
+
 			float3 rayPos = float3(IN.uv_HeightTex.x, 0, IN.uv_HeightTex.y);
 
 			float3 rayDir = normalize(IN.tangentViewDir);
@@ -106,6 +108,8 @@ Shader "ProceduralBlockLandscape/AntonioWiegeParallaxOcclusionMapping"
 			float e = 0.0;//early break to improve performance
 			float height = 1;
 			float oldHeight = 0;
+
+			//Take steps into the volume until surface crossed, then take smaller steps to approximate the surface more accurately. Stepsize influenced by estimate on proximity to surface.
 
 			for (int i = 0; i < _Steps; i++)
 			{
@@ -133,11 +137,13 @@ Shader "ProceduralBlockLandscape/AntonioWiegeParallaxOcclusionMapping"
 						oldHeight = height;
 			 height = (1 - tex2Dlod(_HeightTex, float4(rayPos.xz , 0, 0)).r) * -1 * _Height ;
 			 			 e = abs(rayPos.y-height);
+						 //exit the loop if accuracy is high enough to safe performance
 						 if(e < _QPB){
 						 break;
 						 }
 			}
 
+			//given the last two values (before and after crossing surface) interpolate the two based on their approximate distance to the surface
 			float aa = abs(oldHeight - oldPos.y);float bb = abs(height - rayPos.y);
 			float3 weightedTex = (oldPos*aa+rayPos*bb)/(aa+bb);
 

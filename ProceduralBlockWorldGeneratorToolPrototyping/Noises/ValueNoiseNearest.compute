@@ -1,11 +1,12 @@
 /*Antonio Wiege*/
+//Value Compute Noise Variant with Nearest Neighbor Interpolation
 #pragma kernel ND3Nearest
 #pragma kernel ND2Nearest
-//booleans cannot be set, using floats 0 = false everything else true
+//booleans cannot be set => using floats 0 = false everything else true
 float planarize=0;
 float choppy=0;
-float turbulent=0;//invert to get ridge
-float invert=0;//together with turbulent to get ridge
+float turbulent=0;
+float invert=0;//invert & turbulent to get ridge noise
 float distortSpace=0;
 //regular values ; pre-assigning values does not work in here, the written values are merely standard suggestions
 RWStructuredBuffer<float> Output;//linear layout
@@ -66,16 +67,18 @@ void ND2Nearest (uint3 id : SV_DispatchThreadID)
     float scale = 1;
     int cid = id.x + id.y * dispatchThreadGroupCountX;
     float4 pos =(float4(id.x, id.y, 0, 0)+position+((distortSpace==0)?0:float4(DistortionData[cid].x,DistortionData[cid].y,DistortionData[cid].z,0)))*size;
-        for (int o = octaveStartSize; o < octaveStartSize+octaveCount; o++)
+       
+       for (int o = octaveStartSize; o < octaveStartSize+octaveCount; o++)
         {
             scale = pow(abs(octaveStepPow), o);
-        value +=   abs(ValueNoiseNearest(pos, scale) *pow(scale,octaveInfluenceBias)- ((choppy!=0)?0.5:0))*((choppy!=0)?2:1);
+            value += abs(ValueNoiseNearest(pos, scale) *pow(scale,octaveInfluenceBias)- ((choppy!=0)?0.5:0))*((choppy!=0)?2:1);
             div +=pow(scale,octaveInfluenceBias);
         }
-   value /= (div<1)?1:div;
-   value= (turbulent!=0)?abs ((value-0.5)*2):value;
-  value= (invert!=0)?1-value:value;
-  value = clamp(value*multiplyWith+addPostMultiply-
+
+    value /= (div<1)?1:div;
+    value= (turbulent!=0)?abs ((value-0.5)*2):value;
+    value= (invert!=0)?1-value:value;
+    value = clamp(value*multiplyWith+addPostMultiply-
         ((planarize!=0)?planarizeIntensity*(pos.y-planarizeAtY):0),
         clampEndResultMin,clampEndResultMax);
 
@@ -114,16 +117,18 @@ void ND3Nearest (uint3 id : SV_DispatchThreadID)
     float scale = 1;
     int cid = id.x + id.y * dispatchThreadGroupCountX + id.z * dispatchThreadGroupCountX*dispatchThreadGroupCountX;
     float4 pos = (float4(id.x, id.y, id.z, 0)+position+((distortSpace==0)?0:float4(DistortionData[cid].x,DistortionData[cid].y,DistortionData[cid].z,0)))*size;
-        for (int o = octaveStartSize; o < octaveStartSize+octaveCount; o++)
+      
+      for (int o = octaveStartSize; o < octaveStartSize+octaveCount; o++)
         {
             scale = pow(abs(octaveStepPow), o);
-        value +=   abs(ValueNoiseNearest(pos, scale) *pow(scale,octaveInfluenceBias)- ((choppy!=0)?0.5:0))*((choppy!=0)?2:1);
+            value +=   abs(ValueNoiseNearest(pos, scale) *pow(scale,octaveInfluenceBias)- ((choppy!=0)?0.5:0))*((choppy!=0)?2:1);
             div += pow(scale,octaveInfluenceBias);
         }
+
    value /= (div<1)?1:div;
    value= (turbulent!=0)?abs ((value-0.5)*2):value;
-  value= (invert!=0)?1-value:value;
-  value = clamp(value*multiplyWith+addPostMultiply-
+   value= (invert!=0)?1-value:value;
+   value = clamp(value*multiplyWith+addPostMultiply-
         ((planarize!=0)?planarizeIntensity*(pos.y-planarizeAtY):0),
         clampEndResultMin,clampEndResultMax);
 
@@ -138,10 +143,10 @@ void ND3Nearest (uint3 id : SV_DispatchThreadID)
       Output[cid] *= value*weight;
       break;
       case 4:
-      Output[cid] /= (value*weight==0)?1:value*weight;//do not divide by zero my friend
+      Output[cid] /= (value*weight==0)?1:value*weight;
       break;
       case 5:
-      Output[cid] = value*(.5+weight*.5)+Output[cid]*(.5-weight*.5);//deprecated:weight==0?Output[cid]:
+      Output[cid] = value*(.5+weight*.5)+Output[cid]*(.5-weight*.5);
       break;
       case 6:
       Output[cid] %= value;
@@ -177,9 +182,10 @@ float ValueNoiseNearest(float4 pos, float size)
     pos = Rotate(pos);
 
     float4 o = GridFloor(pos,size); //original in size space
-    float4 p = o * size; //stepped in real space
+    float4 p = o * size; //stepped in world space
     float4 r = (pos - p) / size; //0-1 pos within step
     
+    //Populate grid with random appearing values
     float points[16];
     for (int w = 0; w <= 1; w++) 
     {
@@ -222,7 +228,7 @@ float InterpolateNearestNeighbor(float P1,float P2, float t)
 
 
 
-
+       //round position down to stepSize, minding values such as -0.1 go to -1 and not to 0
     float GridFloor(float value, float gridSize)
     {
         float r = (value-value%gridSize)/gridSize;

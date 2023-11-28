@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: POMprofiling
+  m_Name: POMstone
   m_Shader: {fileID: 4800000, guid: 13231b43b4c39034bb2e08b7661fb088, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -28,11 +28,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _HeightTex:
-        m_Texture: {fileID: 2800000, guid: b35279b5d21936747af9796ca6d4d5e8, type: 3}
+        m_Texture: {fileID: 2800000, guid: dcc9c36fab835bf4ca63df47cee87583, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NormalMap:
-        m_Texture: {fileID: 2800000, guid: 66366b82123c4ae43b0769285bf001aa, type: 3}
+        m_Texture: {fileID: 2800000, guid: 252edc40fa301094ea35f973a0cfa6bf, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
@@ -42,14 +42,14 @@ Material:
     - _Empty: 0.5
     - _FirstOffset: 0.1
     - _HDI2: 0.3
-    - _Height: 0.13
+    - _Height: 0.2
     - _HeightDeltaInfluence: 0.3
-    - _Metallic: 0.125
+    - _Metallic: 0.5
     - _NormInts: 1
     - _QPB: 0.000001
     - _ReRange: 0.25
     - _Scroll: 0
-    - _Shadows: 0.5
+    - _Shadows: 1
     - _Shine: 0.15
     - _Smoothness: 0.5
     - _SsD: 0.015
@@ -58,6 +58,6 @@ Material:
     - _fLOAT: 100000
     - _sD: 0.03
     m_Colors:
-    - _Color: {r: 0.8156863, g: 0.8392157, b: 0.85882354, a: 1}
+    - _Color: {r: 0.79607844, g: 0.79607844, b: 0.79607844, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

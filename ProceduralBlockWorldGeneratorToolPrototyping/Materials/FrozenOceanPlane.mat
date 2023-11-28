@@ -44,20 +44,20 @@ Material:
     - _HDI2: 0.3
     - _Height: 0.2
     - _HeightDeltaInfluence: 0.3
-    - _Metallic: 0.75
+    - _Metallic: 0.1
     - _NormInts: 0.5
-    - _QPB: 0.00001
-    - _ReRange: 0.08
+    - _QPB: 0.000001
+    - _ReRange: 0.1
     - _Scroll: 0.31
-    - _Shadows: 0.86
-    - _Shine: 0.05
-    - _Smoothness: 0.63
-    - _SsD: 0.03
+    - _Shadows: 0.5
+    - _Shine: 0.15
+    - _Smoothness: 0.8699
+    - _SsD: 0.015
     - _Steps: 100
-    - _Steps2: 50
+    - _Steps2: 10
     - _fLOAT: 100000
     - _sD: 0.03
     m_Colors:
-    - _Color: {r: 0.80693007, g: 0.9304933, b: 0.9433962, a: 1}
+    - _Color: {r: 0.699, g: 0.8349727, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

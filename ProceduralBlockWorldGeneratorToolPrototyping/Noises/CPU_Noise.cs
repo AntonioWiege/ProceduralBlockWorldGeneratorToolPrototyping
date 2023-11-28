@@ -6,22 +6,24 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace ProceduralBlockWorldGeneratorToolPrototyping
-{  
+{
     /// <summary>
     /// Unoptimized, direct translation from Compute Shader to C#
+    /// <br>For comparison only. Unusably slow without use of GPU</br>
     /// </summary>
+    /// Using Async by default. Alternative not recommended but asynchronous can be disabled by adding the "Deactivate_Async" Scripting Definition Symbol
     public class CPU_Noise
     {
+        #region variables
         int resultApplicationID = 0;
-        float weight=1;
-
+        float weight = 1;
+        //values bellow are floats even though they represent booleans, because compute shaders don't take boolean values
         float planarize = 0;
         float choppy = 0;
-        float turbulent = 0;//invert to get ridge
-        float invert = 0;//together with turbulent to get ridge
+        float turbulent = 0;
+        float invert = 0;//invert & turbulent to get ridge noise
         float distortSpace = 0;
-        //regular values ; pre-assigning values does not work in here, the written values are merely standard suggestions
-        float[] Output;
+
         int dispatchThreadGroupCountX;
         Vector3[] DistortionData;//overwrite local block pos
 
@@ -44,10 +46,10 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         float addPostMultiply = 0;
         float clampEndResultMin = 0;
         float clampEndResultMax = 1;
-
+        #endregion
         public void PopulateNoise(Int3 key, NoiseInstanceSetup setup, float[] Output, float seed = 0.5f, int dispatchDimensions = 3, int dispatchThreadGroupCountX = LandscapeTool.ChunkScale)
         {
-            this.Output = Output;
+            //copy setup values
             this.dispatchThreadGroupCountX = dispatchThreadGroupCountX;
             resultApplicationID = setup.resultApplicationID;
             weight = setup.weight;
@@ -72,9 +74,16 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             addPostMultiply = setup.addPostMultiply;
             clampEndResultMin = setup.clampEndResultMin;
             clampEndResultMax = setup.clampEndResultMax;
-            #if !Deactivate_Async
+
+#if !Deactivate_Async
             List<Task> toAwait = new();
 #endif
+
+            //Select method to process noise based on setup
+            //  first whether cell or value based
+            //  second dimensions
+            //  third batch execution async or not
+
             if (setup.cellular)
             {
                 if (dispatchDimensions == 3)
@@ -683,7 +692,8 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             }
         }
 
-
+        //direct translations from compute shader code
+        #region High Level Cellular Noise Methods
 
         public void OneDPC3D(Int3 id, float[] Output)
         {
@@ -717,7 +727,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -767,7 +777,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -816,10 +826,10 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
-                    Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);//deprecated:weight==0?Output[cid]:
+                    Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
                     break;
                 case 6:
                     Output[cid] %= value;
@@ -864,7 +874,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -912,7 +922,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -960,7 +970,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1008,7 +1018,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1056,7 +1066,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1104,7 +1114,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1152,7 +1162,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1200,7 +1210,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1248,7 +1258,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1297,7 +1307,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1345,7 +1355,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1393,7 +1403,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1441,7 +1451,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1489,7 +1499,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1537,7 +1547,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1586,7 +1596,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1634,7 +1644,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1682,7 +1692,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1730,7 +1740,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1778,7 +1788,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1826,7 +1836,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     Output[cid] *= value * weight;
                     break;
                 case 4:
-                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;//do not divide by zero my friend
+                    Output[cid] /= (value * weight == 0) ? 1 : value * weight;
                     break;
                 case 5:
                     Output[cid] = value * (.5f + weight * .5f) + Output[cid] * (.5f - weight * .5f);
@@ -1842,18 +1852,15 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     break;
             }
         }
-
-
-
-
-
+        #endregion
+        #region High Level Value Noise Methods
         public float ValueNoiseNearest(Vector4 pos, float size)
         {
 
             pos = Rotate(pos);
 
             Vector4 o = GridFloor(pos, size); //original in size space
-            Vector4 p = o * size; //stepped in real space
+            Vector4 p = o * size; //stepped in world space
             Vector4 r = (pos - p) / size; //0-1 pos within step
 
             float[] points = new float[16];
@@ -1898,7 +1905,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             pos = Rotate(pos);
 
             Vector4 o = GridFloor(pos, size); //original in size space
-            Vector4 p = o * size; //stepped in real space
+            Vector4 p = o * size; //stepped in world space
             Vector4 r = (pos - p) / size; //0-1 pos within step
 
             float[] points = new float[16];
@@ -2128,16 +2135,15 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             return InterpolateTensionedHermite(points[0], points[64], points[128], points[192], r.w);
         }
 
-
-
-
+        #endregion
+        #region Low Level Cellular Noise Methods
         public float CellNoiseOneDPC(Vector4 pos, float size)
         {
 
             pos = Rotate(pos);
 
             Vector4 o = GridFloor(pos, size); //original in size space
-            Vector4 p = o * size; //stepped in real space
+            Vector4 p = o * size; //stepped in world space
             Vector4 r = (pos - p) / size; //0-1 pos within step
                                           //posXYZ&Value now using 4 points per cell
             Vector4[] points = new Vector4[3 * 3 * 3 * 3];
@@ -2192,7 +2198,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                 }
             }
 
-            //better return all the mins in vector form plus the final point_in_Biome_Value_Space and then switch on demand last.
+           
             switch (cellularMethodID)
             {
                 case 0:
@@ -2217,7 +2223,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             pos = Rotate(pos);
 
             Vector4 o = GridFloor(pos, size); //original in size space
-            Vector4 p = o * size; //stepped in real space
+            Vector4 p = o * size; //stepped in world space
             Vector4 r = (pos - p) / size; //0-1 pos within step
                                           //posXYZ&Value now using 4 points per cell
             Vector4[] points = new Vector4[3 * 3 * 3 * 3 * 2];
@@ -2279,7 +2285,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                 }
             }
 
-            //better return all the mins in vector form plus the final point_in_Biome_Value_Space and then switch on demand last.
+           
 
             switch (cellularMethodID)
             {
@@ -2305,7 +2311,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             pos = Rotate(pos);
 
             Vector4 o = GridFloor(pos, size); //original in size space
-            Vector4 p = o * size; //stepped in real space
+            Vector4 p = o * size; //stepped in world space
             Vector4 r = (pos - p) / size; //0-1 pos within step
                                           //posXYZ&Value now using 4 points per cell
             Vector4[] points = new Vector4[3 * 3 * 3 * 3 * 3];
@@ -2374,7 +2380,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                 }
             }
 
-            //better return all the mins in vector form plus the final point_in_Biome_Value_Space and then switch on demand last.
+           
             switch (cellularMethodID)
             {
                 case 0:
@@ -2400,7 +2406,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             pos = Rotate(pos);
 
             Vector4 o = GridFloor(pos, size); //original in size space
-            Vector4 p = o * size; //stepped in real space
+            Vector4 p = o * size; //stepped in world space
             Vector4 r = (pos - p) / size; //0-1 pos within step
                                           //posXYZ&Value now using 4 points per cell
             Vector4[] points = new Vector4[3 * 3 * 3 * 3 * 4];
@@ -2482,7 +2488,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                 }
             }
 
-            //better return all the mins in vector form plus the final point_in_Biome_Value_Space and then switch on demand last.
+           
             switch (cellularMethodID)
             {
                 case 0:
@@ -2508,7 +2514,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             pos = Rotate(pos);
 
             Vector4 o = GridFloor(pos, size); //original in size space
-            Vector4 p = o * size; //stepped in real space
+            Vector4 p = o * size; //stepped in world space
             Vector4 r = (pos - p) / size; //0-1 pos within step
                                           //posXYZ&Value now using 4 points per cell
             Vector4[] points = new Vector4[3 * 3 * 3 * 3 * 5];
@@ -2597,7 +2603,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                 }
             }
 
-            //better return all the mins in vector form plus the final point_in_Biome_Value_Space and then switch on demand last.
+           
             switch (cellularMethodID)
             {
                 case 0:
@@ -2622,7 +2628,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             pos = Rotate(pos);
 
             Vector4 o = GridFloor(pos, size); //original in size space
-            Vector4 p = o * size; //stepped in real space
+            Vector4 p = o * size; //stepped in world space
             Vector4 r = (pos - p) / size; //0-1 pos within step
                                           //posXYZ&Value now using 4 points per cell
             Vector4[] points = new Vector4[3 * 3 * 3 * 3 * 6];
@@ -2717,7 +2723,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                 }
             }
 
-            //better return all the mins in vector form plus the final point_in_Biome_Value_Space and then switch on demand last.
+           
             switch (cellularMethodID)
             {
                 case 0:
@@ -2734,11 +2740,8 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
                     return Vector4.Distance(pos, minP) / size;
             }
         }
-
-
-
-
-
+        #endregion
+        #region Low Level Value Noise Methods (Interpolations)
 
         public float InterpolateNearestNeighbor(float P1, float P2, float t)
         {
@@ -2755,7 +2758,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
 
         public float InterpolateCosine(float P1, float P2, float t)//Cosine Interpolation, http://paulbourke.net/miscellaneous/interpolation/
         {
-            float m = (1 - Mathf.Cos(t * 3.14159265358979323846264338f)) * 0.5f; //custom cos & lin blend
+            float m = (1 - Mathf.Cos(t * 3.14159265358979323846264338f)) * 0.5f;
             return P1 * (1 - m) + P2 * m;
         }
 
@@ -2801,9 +2804,8 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             return (w0 * P1 + w1 * a0 + w2 * a1 + w3 * P2);
         }
 
-
-
-
+        #endregion
+        #region Rotation, GridFloor, Hash
 
         //Rotation happens in 3D space. The rotation defines a vector in xyz plus the angle w to rotate around it (w 1 = 360 | 2PI)
         public Vector4 Rotate(Vector4 p)
@@ -2826,7 +2828,7 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             return new Vector4(o.x, o.y, o.z, p.w);
         }
 
-
+        //round position down to stepSize, minding values such as -0.1 go to -1 and not to 0
         public float GridFloor(float value, float gridSize)
         {
             float r = (value - value % gridSize) / gridSize;
@@ -2957,6 +2959,6 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
             return s;
         }
 
-
+        #endregion
     }
 }

@@ -1492,7 +1492,7 @@ GameObject:
   m_Component:
   - component: {fileID: 202485448}
   m_Layer: 0
-  m_Name: voxanddiacomp (3)
+  m_Name: Reference
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2108,17 +2108,14 @@ MonoBehaviour:
       spaceDistortion: []
     SurfaceLand:
       name: Snow
-      material: {fileID: 0}
       texturesAtlasOrigin: {x: 0.825, y: 0.5}
       color: {r: 1, g: 1, b: 1, a: 1}
     SurfaceUnderwater:
       name: Grass
-      material: {fileID: 0}
       texturesAtlasOrigin: {x: 0.825, y: 0.5}
       color: {r: 1, g: 1, b: 1, a: 1}
     Underground:
       name: Rock
-      material: {fileID: 0}
       texturesAtlasOrigin: {x: 0.825, y: 0.5}
       color: {r: 1, g: 1, b: 1, a: 1}
     scatterDecoratives:
@@ -2191,18 +2188,15 @@ MonoBehaviour:
   forceConvex: 0
   oceanHeight: -4.98
   cloudHeight: 20
-  instancedRendering: 0
   usingPreBoundGen: 1
   startBoundsFill:
     m_Center: {x: -1, y: 1, z: 1}
     m_Extent: {x: 1, y: 2, z: 1}
   clampToStartingBounds: 1
-  CPU_NOISE: 0
+  CPU_Noise: 0
   densityToRealityBorder: 0.5
-  enableFirstSyncPoint: 0
   biomeBlendDistance: 1
   defaultMaterial: {fileID: 2100000, guid: d4ac92c455f896b48874c8bb3e487359, type: 2}
-  instanceMaterial: {fileID: 2100000, guid: 16e37a4d9bc896c45a743e3df23a0172, type: 2}
   Sphere: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   Cone: {fileID: 3613567641014311022, guid: 3f13a508285354c41b0f73d6eff17427, type: 3}
   ValueNoiseNearestNeigbor: {fileID: 7200000, guid: cf6d7df66fa13374f91d60a7e94985d8, type: 3}
@@ -2264,7 +2258,6 @@ MonoBehaviour:
   sphericalOffsetLookUpTable: []
   timeSincePlay: 0
   chunksLoadedSincePlay: 0
-  profilerKillswitch: 0
   startUpTime: 0
 --- !u!4 &302882663
 Transform:
@@ -2715,7 +2708,7 @@ GameObject:
   m_Component:
   - component: {fileID: 375938986}
   m_Layer: 0
-  m_Name: voxanddiacomp (1)
+  m_Name: DiagonalComparisonB
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5407,17 +5400,14 @@ MonoBehaviour:
       spaceDistortion: []
     SurfaceLand:
       name: Snow
-      material: {fileID: 0}
       texturesAtlasOrigin: {x: 0.825, y: 0.5}
       color: {r: 1, g: 1, b: 1, a: 1}
     SurfaceUnderwater:
       name: Grass
-      material: {fileID: 0}
       texturesAtlasOrigin: {x: 0.825, y: 0.5}
       color: {r: 1, g: 1, b: 1, a: 1}
     Underground:
       name: Rock
-      material: {fileID: 0}
       texturesAtlasOrigin: {x: 0.825, y: 0.5}
       color: {r: 1, g: 1, b: 1, a: 1}
     scatterDecoratives:
@@ -5490,18 +5480,15 @@ MonoBehaviour:
   forceConvex: 0
   oceanHeight: -4.98
   cloudHeight: 20
-  instancedRendering: 0
   usingPreBoundGen: 1
   startBoundsFill:
     m_Center: {x: 3, y: 1, z: 1}
     m_Extent: {x: 1, y: 2, z: 1}
   clampToStartingBounds: 1
-  CPU_NOISE: 0
+  CPU_Noise: 0
   densityToRealityBorder: 0.5
-  enableFirstSyncPoint: 0
   biomeBlendDistance: 1
   defaultMaterial: {fileID: 2100000, guid: d4ac92c455f896b48874c8bb3e487359, type: 2}
-  instanceMaterial: {fileID: 2100000, guid: 16e37a4d9bc896c45a743e3df23a0172, type: 2}
   Sphere: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   Cone: {fileID: 3613567641014311022, guid: 3f13a508285354c41b0f73d6eff17427, type: 3}
   ValueNoiseNearestNeigbor: {fileID: 7200000, guid: cf6d7df66fa13374f91d60a7e94985d8, type: 3}
@@ -5563,7 +5550,6 @@ MonoBehaviour:
   sphericalOffsetLookUpTable: []
   timeSincePlay: 0
   chunksLoadedSincePlay: 0
-  profilerKillswitch: 0
   startUpTime: 0
 --- !u!4 &595081164
 Transform:
@@ -10683,7 +10669,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1190182414}
   m_Layer: 0
-  m_Name: voxanddiacomp (2)
+  m_Name: DiagonalComparisonC
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -18844,17 +18830,14 @@ MonoBehaviour:
       spaceDistortion: []
     SurfaceLand:
       name: Snow
-      material: {fileID: 0}
       texturesAtlasOrigin: {x: 0.825, y: 0.5}
       color: {r: 1, g: 1, b: 1, a: 1}
     SurfaceUnderwater:
       name: Grass
-      material: {fileID: 0}
       texturesAtlasOrigin: {x: 0.825, y: 0.5}
       color: {r: 1, g: 1, b: 1, a: 1}
     Underground:
       name: Rock
-      material: {fileID: 0}
       texturesAtlasOrigin: {x: 0.825, y: 0.5}
       color: {r: 1, g: 1, b: 1, a: 1}
     scatterDecoratives:
@@ -18927,18 +18910,15 @@ MonoBehaviour:
   forceConvex: 0
   oceanHeight: -4.98
   cloudHeight: 20
-  instancedRendering: 0
   usingPreBoundGen: 1
   startBoundsFill:
     m_Center: {x: 1, y: 1, z: 1}
     m_Extent: {x: 1, y: 2, z: 1}
   clampToStartingBounds: 1
-  CPU_NOISE: 0
+  CPU_Noise: 0
   densityToRealityBorder: 0.5
-  enableFirstSyncPoint: 0
   biomeBlendDistance: 1
   defaultMaterial: {fileID: 2100000, guid: d4ac92c455f896b48874c8bb3e487359, type: 2}
-  instanceMaterial: {fileID: 2100000, guid: 16e37a4d9bc896c45a743e3df23a0172, type: 2}
   Sphere: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   Cone: {fileID: 3613567641014311022, guid: 3f13a508285354c41b0f73d6eff17427, type: 3}
   ValueNoiseNearestNeigbor: {fileID: 7200000, guid: cf6d7df66fa13374f91d60a7e94985d8, type: 3}
@@ -19000,7 +18980,6 @@ MonoBehaviour:
   sphericalOffsetLookUpTable: []
   timeSincePlay: 0
   chunksLoadedSincePlay: 0
-  profilerKillswitch: 0
   startUpTime: 0
 --- !u!33 &1450673236193766907
 MeshFilter:
@@ -20131,7 +20110,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2725730505457543161}
   m_Layer: 0
-  m_Name: voxanddiacomp
+  m_Name: DiagonalComparisonA
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -22491,7 +22470,7 @@ GameObject:
   - component: {fileID: 5613044912139342703}
   - component: {fileID: 1795580985564288533}
   m_Layer: 0
-  m_Name: Ocean (1)
+  m_Name: OceanPlane
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
