@@ -70,7 +70,6 @@ namespace ProceduralBlockWorldGeneratorToolPrototyping
         {
             directorInstance = inCharge;
             //create basic linear falloff in animationCurve instance
-            falloff.ClearKeys();
             falloff.AddKey(0, 0);
             falloff.AddKey(1, 1);
             falloff.AddKey(-1, -1);

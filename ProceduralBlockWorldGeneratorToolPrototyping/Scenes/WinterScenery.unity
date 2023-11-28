@@ -757,7 +757,6 @@ MonoBehaviour:
     generateGrass: 1
     treeWaterTollerance: 0
   effectorObjects:
-  - {fileID: 0}
   - {fileID: 1080479735}
   PipelineStepsPerSecond: 30
   chunksToLoadAround: 50
